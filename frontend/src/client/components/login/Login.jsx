@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import backgroundImage from "../../../assets/Teacher_on_podium.jpeg";
 import {
   Container,
@@ -14,11 +14,15 @@ import { useFormik } from "formik";
 import axios from "axios";
 import SnackbarAlert from "../../../basic utility components/snackbar/SnackbarAlert";
 import { loginSchema } from "../../../yupSchema/loginSchema";
+import { AuthContext } from "../../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
   const [showPassword, setShowPassword] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -47,9 +51,11 @@ const Login = () => {
         // Get token from headers (alternative: check if it's in response data)
         const token = resp.headers["authorization"] || resp.data.token;
         const user = resp.data.user;
+        
         if (token && user) {
           localStorage.setItem("authToken", token); // Store token for future requests
           localStorage.setItem("user", JSON.stringify(user));
+          login(user, token);
           setSnackbar({
             open: true,
             message: "Login Successfully!",
@@ -62,6 +68,7 @@ const Login = () => {
         }
 
         formik.resetForm();
+        navigate('/department');
       } catch (e) {
         setSnackbar({
           open: true,

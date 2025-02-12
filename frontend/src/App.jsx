@@ -28,15 +28,22 @@ import ExaminationsStudent from "./student/components/examinations/ExaminationsS
 import NoticeStudent from "./student/components/notice/NoticeStudent";
 import ScheduleStudent from "./student/components/schedule/ScheduleStudent";
 import ProtectedRoute from "./guard/ProtectedRoute";
-
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <BrowserRouter>
         <Routes>
           {/* department route */}
-          <Route path="department" element={<ProtectedRoute allowedRoles={['DEPARTMENT']}><Department /></ProtectedRoute>}>
+          <Route
+            path="department"
+            element={
+              <ProtectedRoute allowedRoles={["DEPARTMENT"]}>
+                <Department />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="attendance" element={<Attendance />} />
@@ -49,18 +56,32 @@ function App() {
             <Route path="examinations" element={<Examinations />} />
           </Route>
           {/* student */}
-          <Route path="student" element={<ProtectedRoute allowedRoles={['STUDENT']}><Student /></ProtectedRoute>}>
+          <Route
+            path="student"
+            element={
+              <ProtectedRoute allowedRoles={["STUDENT"]}>
+                <Student />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<StudentDetails />} />
             <Route path="attendance" element={<AttendanceStudent />} />
-            <Route path="examinations" element={<ExaminationsStudent/>} />
+            <Route path="examinations" element={<ExaminationsStudent />} />
             <Route path="notice" element={<NoticeStudent />} />
             <Route path="schedule" element={<ScheduleStudent />} />
           </Route>
           {/* teacher */}
-          <Route path="teacher" element={<ProtectedRoute allowedRoles={['TEACHER']}><Teacher /></ProtectedRoute>}>
+          <Route
+            path="teacher"
+            element={
+              <ProtectedRoute allowedRoles={["TEACHER"]}>
+                <Teacher />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<TeacherDetails />} />
             <Route path="attendance" element={<AttendanceTeacher />} />
-            <Route path="examinations" element={<ExaminationsTeacher/>} />
+            <Route path="examinations" element={<ExaminationsTeacher />} />
             <Route path="notice" element={<NoticeTeacher />} />
             <Route path="schedule" element={<ScheduleTeacher />} />
           </Route>
@@ -73,7 +94,7 @@ function App() {
           </Route>
         </Routes>
       </BrowserRouter>
-    </>
+    </AuthProvider>
   );
 }
 

@@ -1,34 +1,41 @@
-import { createContext, useEffect, useState } from "react"
+import { createContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({children})=>{
-  const [authenticated,setAuthenticated] = useState(flase);
-}
+export const AuthProvider = ({ children }) => {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
 
-export const AuthContext=({children})=>{
-  return(
-    useEffect(()=>{
-      const token = localStorage.getItem('token')
-      const userStr = localStorage.getItem('user')
-      if(token){
-        setAuthenticated(true)
-      }
-      if(userStr){setUser(JSON.parse(userStr))}
-    })
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    const userStr = localStorage.getItem("user");
 
-
-    const login = (credentials)=>{
+    if (token) {
       setAuthenticated(true);
-      setUser(credentials);
     }
 
-    const logout = ()=>{
-      setAuthenticated(false);
-      setUser(null);
+    if (userStr) {
+      setUser(JSON.parse(userStr));
     }
+  }, []);
 
-    <AuthContext.Provider value={{authenticated, user, login, logout}}>{children}</AuthContext.Provider>
-  )
+  const login = (credentials, token) => {
+    setAuthenticated(true);
+    setUser(credentials);
+    localStorage.setItem("authToken", token); // Store token in localStorage
+    localStorage.setItem("user", JSON.stringify(credentials)); // Store user in localStorage
+  };
 
-}
+  const logout = () => {
+    setAuthenticated(false);
+    setUser(null);
+    localStorage.removeItem("authToken"); // Remove token from localStorage
+    localStorage.removeItem("user"); // Remove user from localStorage
+  };
+
+  return (
+    <AuthContext.Provider value={{ authenticated, user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

@@ -15,6 +15,9 @@ app.use(cookieParser());
 
 // CORS Configuration (Allow frontend access)
 const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5173"];
+if (!process.env.CLIENT_URL) {
+  console.warn("⚠️ CLIENT_URL is not defined. Using default localhost URL.");
+}
 
 app.use(
   cors({
@@ -27,11 +30,21 @@ app.use(
 
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/UIET-CONNECT";
+if (!process.env.MONGO_URI) {
+  console.warn("⚠️ MONGO_URI is not defined. Using default localhost URI.");
+}
 
-mongoose
-  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("✅ MongoDB connected successfully"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+const connectMongoDB = async () => {
+  try {
+    await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    console.log("✅ MongoDB connected successfully");
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1); // Exit the process if DB connection fails
+  }
+};
+
+connectMongoDB();
 
 // Routes
 app.use("/api/department", departmentRouter);

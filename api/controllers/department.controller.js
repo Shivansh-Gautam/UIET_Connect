@@ -12,40 +12,44 @@ module.exports = {
     try {
       const form = new formidable.IncomingForm();
       form.parse(req, async (err, fields, files) => {
-        const department = await Department.findOne({email:fields.email[0]})
-        if(department){
-          return res.status(409).json({success:false, message:"Department already exists with this email."})
+        const department = await Department.findOne({ email: fields.email[0] });
+        if (department) {
+          return res
+            .status(409)
+            .json({
+              success: false,
+              message: "Department already exists with this email.",
+            });
+        } else {
+          const photo = files.image[0];
+          let filepath = photo.filepath;
+          let originalFilename = photo.originalFilename.replace(" ", "_");
+          let newPath = path.join(
+            __dirname,
+            process.env.DEPARTMENT_IMAGE_PATH,
+            originalFilename
+          );
+
+          let photoData = fs.readFileSync(filepath);
+          fs.writeFileSync(newPath, photoData);
+
+          const salt = bcrypt.genSaltSync(10);
+          const hashPassword = bcrypt.hashSync(fields.password[0], salt);
+          const newDepartment = new Department({
+            department_name: fields.department_name[0],
+            email: fields.email[0],
+            hod_name: fields.hod_name[0],
+            department_image: originalFilename,
+            password: hashPassword,
+          });
+
+          const savedDepartment = await newDepartment.save();
+          res.status(200).json({
+            success: true,
+            data: savedDepartment,
+            message: "department registered successfully",
+          });
         }
-        else{
-        const photo = files.image[0];
-        let filepath = photo.filepath;
-        let originalFilename = photo.originalFilename.replace(" ", "_");
-        let newPath = path.join(
-          __dirname,
-          process.env.DEPARTMENT_IMAGE_PATH,
-          originalFilename
-        );
-
-        let photoData = fs.readFileSync(filepath);
-        fs.writeFileSync(newPath, photoData);
-
-        const salt = bcrypt.genSaltSync(10);
-        const hashPassword = bcrypt.hashSync(fields.password[0], salt);
-        const newDepartment = new Department({
-          department_name: fields.department_name[0],
-          email: fields.email[0],
-          hod_name: fields.hod_name[0],
-          department_image:originalFilename,
-          password: hashPassword,
-        });
-
-        const savedDepartment = await newDepartment.save();
-        res.status(200).json({
-          success: true,
-          data: savedDepartment,
-          message: "department registered successfully",
-        });
-      }
       });
     } catch (error) {
       res
@@ -131,7 +135,9 @@ module.exports = {
   getDepartmentOwnData: async (req, res) => {
     try {
       const id = req.user.id;
-      const department = await Department.findOne({ _id: id });
+      const department = await Department.findOne({ _id: id }).select([
+        "-password",
+      ]);
       if (department) {
         res.status(200).json({ success: true, department });
       } else {
@@ -150,13 +156,25 @@ module.exports = {
     try {
       const id = req.user.id;
       const form = new formidable.IncomingForm();
+  
+      // Handle form parsing errors
       form.parse(req, async (err, fields, files) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: "Error in form parsing" });
+        }
+  
         const department = await Department.findOne({ _id: id });
+        if (!department) {
+          return res.status(404).json({ success: false, message: "Department not found" });
+        }
+  
+        // Handle image upload
         if (files.image) {
           const photo = files.image[0];
           let filepath = photo.filepath;
           let originalFilename = photo.originalFilename.replace(" ", "_");
-
+  
+          // Delete the old image
           if (department.department_image) {
             let oldImagePath = path.join(
               __dirname,
@@ -165,35 +183,42 @@ module.exports = {
             );
             if (fs.existsSync(oldImagePath)) {
               fs.unlink(oldImagePath, (err) => {
-                if (err) console.log("error in deleting old image", err);
+                if (err) console.log("Error deleting old image:", err);
               });
             }
           }
-
+  
+          // Save the new image
           let newPath = path.join(
             __dirname,
             process.env.DEPARTMENT_IMAGE_PATH,
             originalFilename
           );
-
           let photoData = fs.readFileSync(filepath);
           fs.writeFileSync(newPath, photoData);
-
-          Object.keys(fields).forEach((field) => {
-            department[field] = fields[field][0];
-          });
-          await department.save();
-          res.status(200).json({
-            success: true,
-            message: "department updated successfully",
-            department,
-          });
+  
+          // Update the department's image field
+          department.department_image = originalFilename;
         }
+  
+        // Update other fields
+        Object.keys(fields).forEach((field) => {
+          department[field] = fields[field][0];
+        });
+  
+        // Save the updated department
+        await department.save();
+  
+        // Return the updated department with the new image
+        res.status(200).json({
+          success: true,
+          message: "Department updated successfully",
+          department,
+        });
       });
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "department registration failed" });
+      console.log(error);
+      res.status(500).json({ success: false, message: "Error updating department" });
     }
   },
 };

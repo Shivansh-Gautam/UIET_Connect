@@ -13,10 +13,7 @@ router.post("/register", registerDepartment);
 router.get("/all", getAllDepartments);
 router.post("/login", loginDepartment);
 router.patch("/update",authMiddleware(["DEPARTMENT"]), updateDepartment);
-router.get(
-  "/fetch-single",
-  authMiddleware(["DEPARTMENT"]),
-  getDepartmentOwnData
-);
+router.get("/fetch-single",authMiddleware(["DEPARTMENT"]),getDepartmentOwnData);
+
 
 module.exports = router;
