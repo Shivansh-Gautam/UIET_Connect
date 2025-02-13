@@ -100,7 +100,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <h1>Dashboard</h1>
+      
       {edit && (
         <Box component="form" sx={{ display: "flex", flexDirection: "column", gap: 2 }} noValidate>
           <Box sx={{ textAlign: "center" }}>
@@ -130,7 +130,7 @@ export default function Dashboard() {
           <Button fullWidth variant="contained" color="primary" onClick={handleEditSubmit}>
             Submit Edit
           </Button>
-          <Button fullWidth variant="outlined" onClick={cancelEdit}>
+          <Button fullWidth variant="outlined" sx={{marginBottom:'20px'}} onClick={cancelEdit}>
             Cancel
           </Button>
         </Box>
@@ -151,7 +151,7 @@ export default function Dashboard() {
             alignItems: "center",
           }}
         >
-          <Typography variant="h3">{department.department_name}</Typography>
+          <Typography variant="h2" sx={{fontWeight:'bold',color:'white', textAlign:'center', background:'black', padding:'8px', opacity:'75%', borderRadius:'30px'}}>{department.department_name}</Typography>
           <Box component="div" sx={{ position: "absolute", bottom: "10px", right: "10px" }}>
             <Button variant="outlined" sx={{ background: "white", borderRadius: "50%", height: "60px", color: "black" }} onClick={() => setEdit(true)}>
               <ModeEditOutlineIcon />

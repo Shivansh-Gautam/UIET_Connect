@@ -5,6 +5,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 const departmentRouter = require("./routers/department.router");
+const semesterRouter = require("./routers/semester.router");
+const subjectRouter = require("./routers/subject.router");
+const studentRouter = require("./routers/student.router");
 
 const app = express();
 
@@ -29,14 +32,18 @@ app.use(
 );
 
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/UIET-CONNECT";
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://localhost:27017/UIET-CONNECT";
 if (!process.env.MONGO_URI) {
   console.warn("⚠️ MONGO_URI is not defined. Using default localhost URI.");
 }
 
 const connectMongoDB = async () => {
   try {
-    await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    await mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     console.log("✅ MongoDB connected successfully");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
@@ -48,6 +55,9 @@ connectMongoDB();
 
 // Routes
 app.use("/api/department", departmentRouter);
+app.use("/api/semester", semesterRouter);
+app.use("/api/subject", subjectRouter);
+app.use("/api/student", studentRouter);
 
 // Handle Undefined Routes
 app.use((req, res, next) => {

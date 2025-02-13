@@ -162,8 +162,8 @@ export default function Department() {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar position="fixed" open={open}>
-        <Toolbar>
+      <AppBar position="fixed" open={open} >
+        <Toolbar >
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -183,14 +183,16 @@ export default function Department() {
           </Typography>
         </Toolbar>
       </AppBar>
-      <Drawer variant="permanent" open={open}>
+      <Drawer variant="permanent" open={open} >
         <DrawerHeader>
+        <h1>Admin Dashboard</h1>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === "rtl" ? (
               <ChevronRightIcon />
             ) : (
               <ChevronLeftIcon />
             )}
+            
           </IconButton>
         </DrawerHeader>
         <Divider />
