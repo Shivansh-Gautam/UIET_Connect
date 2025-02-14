@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import backgroundImage from "../../../assets/Teacher_on_podium.jpeg";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
   Container,
   TextField,
@@ -11,6 +13,11 @@ import {
   InputAdornment,
   IconButton,
   MenuItem,
+  CardMedia,
+  CardContent,
+  Card,
+  Grid,
+  CardActions,
 } from "@mui/material";
 import { Visibility, VisibilityOff, CloudUpload } from "@mui/icons-material";
 import { useFormik } from "formik";
@@ -33,7 +40,11 @@ const Students = () => {
 
   const fetchSemesters = async () => {
     if (!token) {
-      setSnackbar({ open: true, message: "Authorization token missing", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: "Authorization token missing",
+        severity: "error",
+      });
       return;
     }
     try {
@@ -43,13 +54,62 @@ const Students = () => {
       setSemesters(response.data.data);
     } catch (error) {
       console.error("Error fetching semesters:", error);
-      setSnackbar({ open: true, message: "Failed to fetch semesters", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch semesters",
+        severity: "error",
+      });
     }
   };
 
+  const [params, setParams] = useState({});
+
+  const handleSemester = (e) => {
+    setParams((prevParams) => ({
+      ...prevParams,
+      student_class: e.target.value || undefined,
+    }));
+  };
+
+  const handleSearch = (e) => {
+    setParams((prevParams) => ({
+      ...prevParams,
+      search: e.target.value || undefined,
+    }));
+  };
+
+  const [students, setStudents] = useState([]);
+
+  const fetchStudents = async () => {
+    if (!token) {
+      setSnackbar({
+        open: true,
+        message: "Authorization token missing",
+        severity: "error",
+      });
+      return;
+    }
+    try {
+      const response = await axios.get(`${baseApi}/student/fetch-with-query`, {
+        params,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStudents(response.data.students);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch students",
+        severity: "error",
+      });
+    }
+  };
   useEffect(() => {
     fetchSemesters();
   }, []);
+  useEffect(() => {
+    fetchStudents();
+  }, [params]);
 
   useEffect(() => {
     return () => {
@@ -70,6 +130,7 @@ const Students = () => {
       student_class: "",
       gender: "",
       age: "",
+      student_contact: "",
       guardian: "",
       guardian_phone: "",
       password: "",
@@ -86,7 +147,11 @@ const Students = () => {
         return;
       }
       if (!token) {
-        setSnackbar({ open: true, message: "Authorization token missing", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: "Authorization token missing",
+          severity: "error",
+        });
         return;
       }
 
@@ -108,7 +173,8 @@ const Students = () => {
       } catch (e) {
         setSnackbar({
           open: true,
-          message: e.response?.data?.message || "Registration failed. Try again.",
+          message:
+            e.response?.data?.message || "Registration failed. Try again.",
           severity: "error",
         });
       }
@@ -123,225 +189,299 @@ const Students = () => {
   };
 
   return (
-    <Container
-      maxWidth="lg"
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        marginTop: "30px",
-        marginBottom: "30px",
-        borderRadius: "40px",
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <Box
-        display="flex"
-        borderRadius={6}
-        flexDirection={{ xs: "column", md: "row" }}
-        alignItems="center"
-        justifyContent="center"
-        width="100%"
-        p={2}
+    <>
+      <Container
+        maxWidth="sm"
+        sx={{ mt: 8, mb: 8, p: 4, borderRadius: 4, boxShadow: 9 }}
       >
+        <Typography
+          variant="h4"
+          component="h1"
+          gutterBottom
+          sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
+        >
+          Register Student
+        </Typography>
         <Box
-          flex={1}
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          p={5}
-          bgcolor="rgba(0, 0, 0, 0.5)"
-          borderRadius={6}
-          sx={{
-            backgroundColor: "black",
-            opacity: "70%",
-            height: "400px",
-            color: "white",
+          component="form"
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+          onSubmit={formik.handleSubmit}
+        >
+          <Box sx={{ textAlign: "center" }}>
+            <input
+              accept="image/*"
+              style={{ display: "none" }}
+              id="upload-image"
+              type="file"
+              onChange={handleImageChange}
+            />
+            <label htmlFor="upload-image">
+              <Button
+                component="span"
+                variant="contained"
+                startIcon={<CloudUpload />}
+              >
+                Upload Image
+              </Button>
+            </label>
+            {image && (
+              <Avatar
+                src={URL.createObjectURL(image)}
+                alt="Preview"
+                sx={{ width: 100, height: 100, margin: "10px auto" }}
+              />
+            )}
+          </Box>
+          <TextField
+            fullWidth
+            label="Name"
+            variant="outlined"
+            {...formik.getFieldProps("name")}
+            error={formik.touched.name && Boolean(formik.errors.name)}
+            helperText={formik.touched.name && formik.errors?.name}
+          />
+          <TextField
+            fullWidth
+            label="Email"
+            variant="outlined"
+            {...formik.getFieldProps("email")}
+            error={formik.touched.email && Boolean(formik.errors.email)}
+            helperText={formik.touched.email && formik.errors?.email}
+          />
+          <TextField
+            select
+            fullWidth
+            label="Student Class"
+            variant="outlined"
+            {...formik.getFieldProps("student_class")}
+            error={
+              formik.touched.student_class &&
+              Boolean(formik.errors.student_class)
+            }
+            helperText={
+              formik.touched.student_class && formik.errors?.student_class
+            }
+          >
+            {semesters.map((x) => (
+              <MenuItem key={x._id} value={x._id}>
+                {x.semester_text} ({x.semester_num})
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            fullWidth
+            label="Gender"
+            variant="outlined"
+            {...formik.getFieldProps("gender")}
+            error={formik.touched.gender && Boolean(formik.errors.gender)}
+            helperText={formik.touched.gender && formik.errors?.gender}
+          >
+            {["Male", "Female", "Other"].map((gender) => (
+              <MenuItem key={gender} value={gender}>
+                {gender}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            fullWidth
+            label="Age"
+            variant="outlined"
+            {...formik.getFieldProps("age")}
+            error={formik.touched.age && Boolean(formik.errors.age)}
+            helperText={formik.touched.age && formik.errors?.age}
+          />
+          <TextField
+            fullWidth
+            label="Student Contact"
+            variant="outlined"
+            {...formik.getFieldProps("student_contact")}
+            error={
+              formik.touched.student_contact &&
+              Boolean(formik.errors.student_contact)
+            }
+            helperText={
+              formik.touched.student_contact && formik.errors?.student_contact
+            }
+          />
+
+          <TextField
+            fullWidth
+            label="Guardian"
+            variant="outlined"
+            {...formik.getFieldProps("guardian")}
+            error={formik.touched.guardian && Boolean(formik.errors.guardian)}
+            helperText={formik.touched.guardian && formik.errors?.guardian}
+          />
+
+          <TextField
+            fullWidth
+            label="Guardian Phone"
+            variant="outlined"
+            {...formik.getFieldProps("guardian_phone")}
+            error={
+              formik.touched.guardian_phone &&
+              Boolean(formik.errors.guardian_phone)
+            }
+            helperText={
+              formik.touched.guardian_phone && formik.errors?.guardian_phone
+            }
+          />
+
+          <TextField
+            fullWidth
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            variant="outlined"
+            {...formik.getFieldProps("password")}
+            error={formik.touched.password && Boolean(formik.errors.password)}
+            helperText={formik.touched.password && formik.errors?.password}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <TextField
+            fullWidth
+            label="Confirm Password"
+            type={showPassword ? "text" : "password"}
+            variant="outlined"
+            {...formik.getFieldProps("confirm_password")}
+            error={
+              formik.touched.confirm_password &&
+              Boolean(formik.errors.confirm_password)
+            }
+            helperText={
+              formik.touched.confirm_password && formik.errors?.confirm_password
+            }
+          />
+          <Button fullWidth variant="contained" color="primary" type="submit">
+            Register
+          </Button>
+        </Box>
+        <SnackbarAlert
+          open={snackbar.open}
+          message={snackbar.message}
+          severity={snackbar.severity}
+          onClose={handleCloseSnackbar}
+        />
+      </Container>
+
+      <Box
+        component={"div"}
+        sx={{ display: "flex", flexDirection: "row", gap: "10px" }}
+      >
+        <TextField
+          select
+          fullWidth
+          label="Student Class"
+          value={params.student_class ? params.student_class : ""}
+          variant="outlined"
+          onChange={(e) => {
+            handleSemester(e);
           }}
         >
-          <Typography variant="subtitle1" color="primary" gutterBottom>
-            UNLOCK YOUR ACADEMIC POTENTIAL
-          </Typography>
-          <Typography variant="h3" component="h1" gutterBottom>
-            Register Student
-          </Typography>
-          <Typography variant="body1">
-            Access your personalized student dashboard, manage your academic
-            profile, and stay updated with important notices.
-          </Typography>
-        </Box>
-        <Box
-          flex={1}
-          p={4}
-          borderRadius={6}
-          boxShadow={18}
-          sx={{ backgroundColor: "white" }}
-          mt={{ xs: 4, md: 0 }}
-          ml={{ md: 4 }}
-        >
-          <Box
-            component="form"
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-            onSubmit={formik.handleSubmit}
-          >
-            <Box sx={{ textAlign: "center" }}>
-              <input
-                accept="image/*"
-                style={{ display: "none" }}
-                id="upload-image"
-                type="file"
-                onChange={handleImageChange}
-              />
-              <label htmlFor="upload-image">
-                <Button
-                  component="span"
-                  variant="contained"
-                  startIcon={<CloudUpload />}
-                >
-                  Upload Image
-                </Button>
-              </label>
-              {image && (
-                <Avatar
-                  src={URL.createObjectURL(image)}
-                  alt="Preview"
-                  sx={{ width: 100, height: 100, margin: "10px auto" }}
-                />
-              )}
-            </Box>
-            <TextField
-              fullWidth
-              label="Name"
-              variant="outlined"
-              {...formik.getFieldProps("name")}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name && formik.errors?.name}
-            />
-            <TextField
-              fullWidth
-              label="Email"
-              variant="outlined"
-              {...formik.getFieldProps("email")}
-              error={formik.touched.email && Boolean(formik.errors.email)}
-              helperText={formik.touched.email && formik.errors?.email}
-            />
-            <TextField
-              select
-              fullWidth
-              label="Student Class"
-              variant="outlined"
-              {...formik.getFieldProps("student_class")}
-              error={
-                formik.touched.student_class &&
-                Boolean(formik.errors.student_class)
-              }
-              helperText={
-                formik.touched.student_class && formik.errors?.student_class
-              }
-            >
-              {semesters.map((x) => (
-                <MenuItem key={x._id} value={x._id}>
-                  {x.semester_text} ({x.semester_num})
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              label="Gender"
-              variant="outlined"
-              {...formik.getFieldProps("gender")}
-              error={formik.touched.gender && Boolean(formik.errors.gender)}
-              helperText={formik.touched.gender && formik.errors?.gender}
-            >
-              {["Male", "Female", "Other"].map((gender) => (
-                <MenuItem key={gender} value={gender}>
-                  {gender}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              fullWidth
-              label="Age"
-              variant="outlined"
-              {...formik.getFieldProps("age")}
-              error={formik.touched.age && Boolean(formik.errors.age)}
-              helperText={formik.touched.age && formik.errors?.age}
-            />
-
-            <TextField
-              fullWidth
-              label="Guardian"
-              variant="outlined"
-              {...formik.getFieldProps("guardian")}
-              error={formik.touched.guardian && Boolean(formik.errors.guardian)}
-              helperText={formik.touched.guardian && formik.errors?.guardian}
-            />
-
-            <TextField
-              fullWidth
-              label="Guardian Phone"
-              variant="outlined"
-              {...formik.getFieldProps("guardian_phone")}
-              error={
-                formik.touched.guardian_phone &&
-                Boolean(formik.errors.guardian_phone)
-              }
-              helperText={
-                formik.touched.guardian_phone && formik.errors?.guardian_phone
-              }
-            />
-
-            <TextField
-              fullWidth
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              variant="outlined"
-              {...formik.getFieldProps("password")}
-              error={formik.touched.password && Boolean(formik.errors.password)}
-              helperText={formik.touched.password && formik.errors?.password}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Confirm Password"
-              type={showPassword ? "text" : "password"}
-              variant="outlined"
-              {...formik.getFieldProps("confirm_password")}
-              error={
-                formik.touched.confirm_password &&
-                Boolean(formik.errors.confirm_password)
-              }
-              helperText={
-                formik.touched.confirm_password &&
-                formik.errors?.confirm_password
-              }
-            />
-            <Button fullWidth variant="contained" color="primary" type="submit">
-              Register
-            </Button>
-          </Box>
-          <SnackbarAlert
-            open={snackbar.open}
-            message={snackbar.message}
-            severity={snackbar.severity}
-            onClose={handleCloseSnackbar}
-          />
-        </Box>
+          <MenuItem value="">Select Semester</MenuItem>
+          {semesters.map((x) => (
+            <MenuItem key={x._id} value={x._id}>
+              {x.semester_text} ({x.semester_num})
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          fullWidth
+          label="Search"
+          variant="outlined"
+          value={params.search ? params.search : ""}
+          onChange={(e) => {
+            handleSearch(e);
+          }}
+        />
       </Box>
-    </Container>
+      <Box
+        component="div"
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+          gap: 2,
+          marginTop: "40px",
+        }}
+      >
+        {students &&
+          students.map((student) => (
+            <Card
+              key={student._id}
+              sx={{
+                height: 450,
+                boxShadow: 4,
+                borderRadius: 4,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <CardMedia
+                component="img"
+                sx={{ height: 180, objectFit: "cover" }}
+                image={`/images/uploaded/student/${student.student_image}`}
+                alt="Student Image"
+              />
+              <CardContent
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  padding: 1,
+                }}
+              >
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    <strong>Name:</strong> {student.name}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Email:</strong> {student.email}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Semester:</strong>{" "}
+                    {student.student_class.semester_text} (
+                    {student.student_class.semester_num})
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Age:</strong> {student.age}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Contact:</strong> {student.student_contact}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Gender:</strong> {student.gender}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Guardian:</strong> {student.guardian}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Guardian Phone:</strong> {student.guardian_phone}
+                  </Typography>
+                </Box>
+              </CardContent>
+              <CardActions sx={{ justifyContent: "space-between", padding: 1 }}>
+                <IconButton color="primary">
+                  <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton color="error">
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </CardActions>
+            </Card>
+          ))}
+      </Box>
+    </>
   );
 };
 

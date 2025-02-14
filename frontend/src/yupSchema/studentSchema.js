@@ -12,6 +12,11 @@ export const studentSchema = yup.object({
   student_class: yup.string().required("student class is required field"),
   gender: yup.string().required("gender is required"),
   age: yup.string().required("age is required"),
+  student_contact: yup
+    .string()
+    .min(9, "must contain 9 character")
+    .max(11, "can't extend 11 characters")
+    .required("student contact is required"),
   guardian: yup
     .string()
     .min(4, "must contain 4 characters")

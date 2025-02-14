@@ -13,7 +13,7 @@ const {
 const router = express.Router();
 
 router.post("/register",authMiddleware(['DEPARTMENT']), registerStudent);
-router.get("/all",authMiddleware(['DEPARTMENT']), getStudentsWithQuery);
+router.get("/fetch-with-query",authMiddleware(['DEPARTMENT']), getStudentsWithQuery);
 router.post("/login", loginStudent);
 router.patch("/update",authMiddleware(["DEPARTMENT"]), updateStudent);
 router.get("/fetch-single",authMiddleware(["STUDENT"]),getStudentOwnData);

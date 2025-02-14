@@ -40,6 +40,7 @@ module.exports = {
             student_class: fields.student_class[0],
             gender: fields.gender[0],
             age: fields.age[0],
+            student_contact: fields.student_contact[0],
             guardian: fields.guardian[0],
             guardian_phone: fields.guardian_phone[0],
             student_image: originalFilename,
@@ -113,14 +114,14 @@ module.exports = {
       filterQuery["department"] = departmentId;
 
       if (req.query.hasOwnProperty("search")) {
-        filterQuery["name"] = { $regex: req.query.search, $option: "i" };
+        filterQuery["name"] = { $regex: req.query.search, $options: "i" };
       }
 
       if (req.query.hasOwnProperty("student_class")) {
         filterQuery["student_class"] = req.query.student_class;
       }
 
-      const students = await Student.find(filterQuery).select(["-password"]);
+      const students = await Student.find(filterQuery).populate(['student_class']).select(["-password"]);
       res.status(200).json({
         success: true,
         message: "success in fetching all Students",
