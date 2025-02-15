@@ -86,7 +86,7 @@ module.exports = {
             success: true,
             message: "successfully login",
             user: {
-              id: Student._id,
+              id: student._id,
               departmentId: student.department,
               student_name: student.student_name,
               image_url: student.student_image,
@@ -121,7 +121,8 @@ module.exports = {
         filterQuery["student_class"] = req.query.student_class;
       }
 
-      const students = await Student.find(filterQuery).populate(['student_class']).select(["-password"]);
+      const students = await Student.find(filterQuery)
+        .populate("student_class");
       res.status(200).json({
         success: true,
         message: "success in fetching all Students",
@@ -179,77 +180,51 @@ module.exports = {
 
   updateStudent: async (req, res) => {
     try {
-      const id = req.user.id;
+      const id = req.params.id;
       const form = new formidable.IncomingForm();
 
-      // Handle form parsing errors
       form.parse(req, async (err, fields, files) => {
         if (err) {
-          return res
-            .status(500)
-            .json({ success: false, message: "Error in form parsing" });
+          return res.status(500).json({ success: false, message: "Error in form parsing" });
         }
 
         const student = await Student.findOne({ _id: id });
         if (!student) {
-          return res
-            .status(404)
-            .json({ success: false, message: "Student not found" });
+          return res.status(404).json({ success: false, message: "Student not found" });
         }
 
-        // Handle image upload
         if (files.image) {
           const photo = files.image[0];
           let filepath = photo.filepath;
           let originalFilename = photo.originalFilename.replace(" ", "_");
 
-          // Delete the old image
           if (student.student_image) {
-            let oldImagePath = path.join(
-              __dirname,
-              process.env.STUDENT_IMAGE_PATH,
-              student.student_image
-            );
+            let oldImagePath = path.join(__dirname, process.env.STUDENT_IMAGE_PATH, student.student_image);
             if (fs.existsSync(oldImagePath)) {
-              fs.unlink(oldImagePath, (err) => {
-                if (err) console.log("Error deleting old image:", err);
-              });
+              fs.unlink(oldImagePath, (err) => { if (err) console.log("Error deleting old image:", err); });
             }
           }
 
-          // Save the new image
-          let newPath = path.join(
-            __dirname,
-            process.env.STUDENT_IMAGE_PATH,
-            originalFilename
-          );
+          let newPath = path.join(__dirname, process.env.STUDENT_IMAGE_PATH, originalFilename);
           let photoData = fs.readFileSync(filepath);
           fs.writeFileSync(newPath, photoData);
 
-          // Update the Student's image field
           student.student_image = originalFilename;
         }
 
-        // Update other fields
         Object.keys(fields).forEach((field) => {
-          student[field] = fields[field][0];
+          if (field !== 'password') {
+            student[field] = fields[field][0];
+          }
         });
 
-        // Save the updated Student
         await student.save();
 
-        // Return the updated Student with the new image
-        res.status(200).json({
-          success: true,
-          message: "Student updated successfully",
-          student,
-        });
+        res.status(200).json({ success: true, message: "Student updated successfully", student });
       });
     } catch (error) {
       console.log(error);
-      res
-        .status(500)
-        .json({ success: false, message: "Error updating Student" });
+      res.status(500).json({ success: false, message: "Error updating Student" });
     }
   },
 
@@ -257,7 +232,10 @@ module.exports = {
     try {
       const id = req.params.id;
       const departmentId = req.user.departmentId;
-      const student = await Student.findOneAndDelete({_id:id,department:departmentId});
+      const student = await Student.findOneAndDelete({
+        _id: id,
+        department: departmentId,
+      });
       if (!student) {
         return res
           .status(404)

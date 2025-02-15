@@ -1,6 +1,6 @@
 import * as yup from "yup";
 
-export const studentSchema = yup.object({
+export const studentEditSchema = yup.object({
   name: yup
     .string()
     .min(6, "name must contain 6 characters")
@@ -29,10 +29,9 @@ export const studentSchema = yup.object({
 
   password: yup
     .string()
-    .min(8, "password must contain 8 characters")
-    .required("Password is required"),
+    .min(8, "password must contain 8 characters"),
   confirm_password: yup
     .string()
     .oneOf([yup.ref("password")], "Password not matched")
-    .required("Password is required"),
+    ,
 });

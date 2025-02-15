@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import backgroundImage from "../../../assets/Teacher_on_podium.jpeg";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -25,11 +24,12 @@ import axios from "axios";
 import SnackbarAlert from "../../../basic utility components/snackbar/SnackbarAlert";
 import { studentSchema } from "../../../yupSchema/studentSchema";
 import { baseApi } from "../../../environment";
+import { studentEditSchema } from "../../../yupSchema/studentEditSchema";
 
 const Students = () => {
   const token = localStorage.getItem("authToken");
-
-  const [image, setImage] = useState(null);
+  const [edit, setEdit] = useState(false);
+  const [editId, setEditId] = useState(null);  const [image, setImage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [semesters, setSemesters] = useState([]);
   const [snackbar, setSnackbar] = useState({
@@ -77,6 +77,44 @@ const Students = () => {
       search: e.target.value || undefined,
     }));
   };
+
+
+  const handleEdit = (id) => {
+    setEdit(true);
+    setEditId(id);
+    const student = students.find((x) => x._id === id);
+    formik.setValues({
+      name: student.name,
+      email: student.email,
+      student_class: student.student_class._id,
+      gender: student.gender,
+      age: student.age,
+      student_contact: student.student_contact,
+      guardian: student.guardian,
+      guardian_phone: student.guardian_phone,
+      password: "",
+      confirm_password: "",
+    });
+  };
+
+  const handleDelete = async (studentId) => {
+    if (!token) {
+      setSnackbar({ open: true, message: "Authorization token missing", severity: "error" });
+      return;
+    }
+    try {
+      await axios.delete(`${baseApi}/student/delete/${studentId}`, { headers: { Authorization: `Bearer ${token}` } });
+      setSnackbar({ open: true, message: "Student deleted successfully!", severity: "success" });
+      fetchStudents();
+    } catch (error) {
+      setSnackbar({ open: true, message: "Failed to delete student", severity: "error" });
+    }
+  };
+
+  const handleCancel = ()=>{
+    formik.resetForm();
+    setEdit(false)
+  }
 
   const [students, setStudents] = useState([]);
 
@@ -136,9 +174,9 @@ const Students = () => {
       password: "",
       confirm_password: "",
     },
-    validationSchema: studentSchema,
+    validationSchema:edit?studentEditSchema:studentSchema,
     onSubmit: async (values) => {
-      if (!image) {
+      if (!edit && !image) { // Only check for image on new registration
         setSnackbar({
           open: true,
           message: "Please upload an image before registering.",
@@ -156,27 +194,27 @@ const Students = () => {
       }
 
       const fd = new FormData();
-      fd.append("image", image, image.name);
+      if (image) fd.append("image", image, image.name); // Only append image if present
       Object.keys(values).forEach((key) => fd.append(key, values[key]));
 
       try {
-        await axios.post(`${baseApi}/student/register`, fd, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSnackbar({
-          open: true,
-          message: "Registered Successfully!",
-          severity: "success",
-        });
+        if (edit) {
+          await axios.patch(`${baseApi}/student/update/${editId}`, fd, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setSnackbar({ open: true, message: "Student updated successfully!", severity: "success" });
+        } else {
+          await axios.post(`${baseApi}/student/register`, fd, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setSnackbar({ open: true, message: "Registered Successfully!", severity: "success" });
+        }
         formik.resetForm();
+        setEdit(false);
         setImage(null);
+        fetchStudents();
       } catch (e) {
-        setSnackbar({
-          open: true,
-          message:
-            e.response?.data?.message || "Registration failed. Try again.",
-          severity: "error",
-        });
+        setSnackbar({ open: true, message: e.response?.data?.message || "Operation failed.", severity: "error" });
       }
     },
   });
@@ -194,14 +232,21 @@ const Students = () => {
         maxWidth="sm"
         sx={{ mt: 8, mb: 8, p: 4, borderRadius: 4, boxShadow: 9 }}
       >
-        <Typography
+        {edit?<Typography
           variant="h4"
           component="h1"
           gutterBottom
           sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
         >
-          Register Student
-        </Typography>
+          Edit Student
+        </Typography>:<Typography
+          variant="h4"
+          component="h1"
+          gutterBottom
+          sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
+        >
+          Add New Student
+        </Typography>}
         <Box
           component="form"
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
@@ -361,9 +406,16 @@ const Students = () => {
               formik.touched.confirm_password && formik.errors?.confirm_password
             }
           />
-          <Button fullWidth variant="contained" color="primary" type="submit">
+          <Box sx={{textAlign:'center'}}>
+          {edit?<Button sx={{width:'120px',margin:'5px'}} variant="contained" color="primary" type="submit">
+            Update
+          </Button>:<Button sx={{width:'120px',margin:'5px'}} variant="contained" color="primary" type="submit">
             Register
-          </Button>
+          </Button>}
+          {edit && <Button sx={{width:'120px',margin:'5px', background:'red'}} variant="contained"  type="button"onClick={()=>{handleCancel()}}>
+            cancel
+          </Button>}
+          </Box>
         </Box>
         <SnackbarAlert
           open={snackbar.open}
@@ -471,10 +523,10 @@ const Students = () => {
                 </Box>
               </CardContent>
               <CardActions sx={{ justifyContent: "space-between", padding: 1 }}>
-                <IconButton color="primary">
+                <IconButton color="primary" onClick={()=>{handleEdit(student._id)}}>
                   <EditIcon fontSize="small" />
                 </IconButton>
-                <IconButton color="error">
+                <IconButton color="error" onClick={()=>{handleDelete(student._id)}}>
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </CardActions>
