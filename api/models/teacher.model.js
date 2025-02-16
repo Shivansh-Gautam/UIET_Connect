@@ -7,9 +7,8 @@ const teacherSchema = new mongoose.Schema({
   qualification: { type: String, required: true },
   gender: { type: String, required: true },
   age: { type: Number, required: true },
-  department_image: { type: string, required: true },
-  password: { type: string, required: true },
-
+  teacher_image: { type: String, required: true },
+  password: { type: String, required: true },
   createdAt: { type: Date, default: new Date() },
 });
 

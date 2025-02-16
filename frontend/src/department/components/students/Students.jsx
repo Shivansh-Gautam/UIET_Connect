@@ -22,9 +22,8 @@ import { Visibility, VisibilityOff, CloudUpload } from "@mui/icons-material";
 import { useFormik } from "formik";
 import axios from "axios";
 import SnackbarAlert from "../../../basic utility components/snackbar/SnackbarAlert";
-import { studentSchema } from "../../../yupSchema/studentSchema";
+import { studentEditSchema, studentSchema } from "../../../yupSchema/studentSchema";
 import { baseApi } from "../../../environment";
-import { studentEditSchema } from "../../../yupSchema/studentEditSchema";
 
 const Students = () => {
   const token = localStorage.getItem("authToken");

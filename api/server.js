@@ -8,6 +8,7 @@ const departmentRouter = require("./routers/department.router");
 const semesterRouter = require("./routers/semester.router");
 const subjectRouter = require("./routers/subject.router");
 const studentRouter = require("./routers/student.router");
+const teacherRouter = require("./routers/teacher.router");
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/department", departmentRouter);
 app.use("/api/semester", semesterRouter);
 app.use("/api/subject", subjectRouter);
 app.use("/api/student", studentRouter);
+app.use("/api/teacher", teacherRouter);
 
 // Handle Undefined Routes
 app.use((req, res, next) => {
