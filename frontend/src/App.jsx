@@ -2,7 +2,7 @@ import "./App.css";
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Department from "./department/department";
-import Attendance from "./department/components/attendance/Attendance";
+import AttendanceStudentsList from "./department/components/attendance/AttendanceStudentsList";
 import Examinations from "./department/components/examinations/Examinations";
 import Notice from "./department/components/notice/Notice";
 import Teachers from "./department/components/teachers/Teachers";
@@ -30,6 +30,7 @@ import ScheduleStudent from "./student/components/schedule/ScheduleStudent";
 import ProtectedRoute from "./guard/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
+
 function App() {
   return (
     <AuthProvider>
@@ -46,7 +47,7 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="attendance" element={<Attendance />} />
+            <Route path="attendance" element={<AttendanceStudentsList />} />
             <Route path="class" element={<Class />} />
             <Route path="students" element={<Students />} />
             <Route path="teachers" element={<Teachers />} />
