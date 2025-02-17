@@ -6,4 +6,5 @@ export const subjectSchema = yup.object({
 
   subject_codename: yup
     .string().required("subject codename is required"),
+    student_class: yup.string().required("student class is required field"),
 });

@@ -26,6 +26,7 @@ module.exports = {
         department: req.user.departmentId,
         subject_name: req.body.subject_name,
         subject_codename: req.body.subject_codename,
+        student_class: req.body.student_class,
       });
 
       await newSubject.save();
@@ -83,6 +84,33 @@ module.exports = {
       res
         .status(500)
         .json({ success: false, message: "Server error in deleting Subject" });
+    }
+  },
+
+  getSubjectsWithQuery: async (req, res) => {
+    try {
+      const filterQuery = {};
+      const departmentId = req.user.departmentId;
+      filterQuery["department"] = departmentId;
+
+     
+
+      if (req.query.hasOwnProperty("student_class")) {
+        filterQuery["student_class"] = req.query.student_class;
+      }
+
+      const subjects = await Subject.find(filterQuery)
+        .populate("student_class");
+      res.status(200).json({
+        success: true,
+        message: "success in fetching all Students",
+        subjects,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "internal server error:[all Student]",
+      });
     }
   },
 };
