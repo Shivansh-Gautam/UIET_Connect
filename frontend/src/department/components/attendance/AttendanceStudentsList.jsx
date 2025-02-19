@@ -9,11 +9,15 @@ const AttendanceStudentsList = () => {
   const [semesters, setSemesters] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
-  const [params, setParams] = useState({});
+  const [params, setParams] = useState({
+    student_class: '',
+    subject: '',
+    search: ''
+  });
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
   useEffect(() => { fetchSemesters(); }, []);
-  useEffect(() => { fetchStudents(); }, [params]);
+  useEffect(() => { if (params.student_class) fetchStudents(); }, [params]);
 
   const fetchSemesters = async () => {
     try {
@@ -38,8 +42,13 @@ const AttendanceStudentsList = () => {
 
   const handleSemesterChange = (e) => {
     const semesterId = e.target.value;
-    setParams((prev) => ({ ...prev, student_class: semesterId }));
+    setParams((prev) => ({ ...prev, student_class: semesterId, subject: '' }));
     fetchSubjects(semesterId);
+  };
+
+  const handleSubjectChange = (e) => {
+    const subjectId = e.target.value;
+    setParams((prev) => ({ ...prev, subject: subjectId }));
   };
 
   const handleSearch = (e) => setParams((prev) => ({ ...prev, search: e.target.value }));
@@ -53,6 +62,8 @@ const AttendanceStudentsList = () => {
     }
   };
 
+  const isValidValue = (value, options) => options.some(option => option._id === value);
+
   return (
     <Container>
       <Typography variant="h4" sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}>Student Attendance</Typography>
@@ -60,21 +71,35 @@ const AttendanceStudentsList = () => {
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField select fullWidth label="Semester" value={params.student_class || ""} onChange={handleSemesterChange}>
+            <TextField
+              select
+              fullWidth
+              label="Semester"
+              value={isValidValue(params.student_class, semesters) ? params.student_class : ''}
+              onChange={handleSemesterChange}
+            >
               <MenuItem value="">Select Semester</MenuItem>
               {semesters.map((x) => (
                 <MenuItem key={x._id} value={x._id}>{x.semester_text} ({x.semester_num})</MenuItem>
               ))}
             </TextField>
+
             {subjects.length > 0 && (
-              <TextField select fullWidth label="Subject" value={params.subject || ""} onChange={(e) => setParams((prev) => ({ ...prev, subject: e.target.value }))}>
+              <TextField
+                select
+                fullWidth
+                label="Subject"
+                value={isValidValue(params.subject, subjects) ? params.subject : ''}
+                onChange={handleSubjectChange}
+              >
                 <MenuItem value="">Select Subject</MenuItem>
                 {subjects.map((subject) => (
                   <MenuItem key={subject._id} value={subject._id}>{subject.subject_name}</MenuItem>
                 ))}
               </TextField>
             )}
-            <TextField fullWidth label="Search" value={params.search || ""} onChange={handleSearch} />
+
+            <TextField fullWidth label="Search" value={params.search} onChange={handleSearch} />
           </Box>
         </Grid>
         <Grid item xs={12} md={8}>

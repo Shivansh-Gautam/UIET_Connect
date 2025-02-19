@@ -93,14 +93,12 @@ module.exports = {
       const departmentId = req.user.departmentId;
       filterQuery["department"] = departmentId;
 
-     
-
       if (req.query.hasOwnProperty("student_class")) {
         filterQuery["student_class"] = req.query.student_class;
       }
 
-      const subjects = await Subject.find(filterQuery)
-        .populate("student_class");
+      const subjects =
+        await Subject.find(filterQuery).populate("student_class");
       res.status(200).json({
         success: true,
         message: "success in fetching all Students",
