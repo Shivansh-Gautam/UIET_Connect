@@ -29,6 +29,7 @@ import NoticeStudent from "./student/components/notice/NoticeStudent";
 import ScheduleStudent from "./student/components/schedule/ScheduleStudent";
 import ProtectedRoute from "./guard/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
+import LogOut from "./client/components/logout/LogOut";
 
 
 function App() {
@@ -92,6 +93,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
+            <Route path="logout" element={<LogOut />} />
           </Route>
         </Routes>
       </BrowserRouter>

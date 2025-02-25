@@ -31,6 +31,7 @@ import ExplicitIcon from "@mui/icons-material/Explicit";
 import RecentActorsIcon from "@mui/icons-material/RecentActors";
 import ClassIcon from "@mui/icons-material/Class";
 import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const drawerWidth = 240;
 
@@ -151,6 +152,11 @@ export default function Department() {
       link: "/department/attendance",
       component: "Attendance",
       icon: RecentActorsIcon,
+    },
+    {
+      link: "/logout",
+      component: "Log Out",
+      icon: LogoutIcon,
     },
   ];
 

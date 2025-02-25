@@ -8,6 +8,10 @@ import {
   Box,
   InputAdornment,
   IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useFormik } from "formik";
@@ -22,6 +26,7 @@ const API_BASE_URL =
 
 const Login = () => {
   const navigate = useNavigate();
+  const [role, setRole] = useState("student");
   const { login } = useContext(AuthContext);
   const [showPassword, setShowPassword] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -41,9 +46,19 @@ const Login = () => {
     },
     validationSchema: loginSchema,
     onSubmit: async (values) => {
+      let URL;
+      if (role === "student") {
+        URL = `${API_BASE_URL}/api/student/login`;
+        } else if(role === "teacher"){
+          URL = `${API_BASE_URL}/api/teacher/login`;
+          }
+        else if(role === "department"){
+          URL = `${API_BASE_URL}/api/department/login`;
+        }
+
       try {
         const resp = await axios.post(
-          `${API_BASE_URL}/api/department/login`,
+          URL,
           values,
           { withCredentials: true } // Ensures cookies/tokens are sent
         );
@@ -51,7 +66,7 @@ const Login = () => {
         // Get token from headers (alternative: check if it's in response data)
         const token = resp.headers["authorization"] || resp.data.token;
         const user = resp.data.user;
-        
+
         if (token && user) {
           localStorage.setItem("authToken", token); // Store token for future requests
           localStorage.setItem("user", JSON.stringify(user));
@@ -68,7 +83,7 @@ const Login = () => {
         }
 
         formik.resetForm();
-        navigate('/department');
+        navigate(`/${role}`);
       } catch (e) {
         setSnackbar({
           open: true,
@@ -123,11 +138,11 @@ const Login = () => {
             UNLOCK YOUR ACADEMIC POTENTIAL
           </Typography>
           <Typography variant="h3" component="h1" gutterBottom>
-            Register Your Department
+            LogIn to your Account
           </Typography>
           <Typography variant="body1">
-            Access your personalized student dashboard, manage your academic
-            profile, and stay updated with important notices.
+            Access your personalized dashboard, manage your academic profile,
+            and stay updated with important notices.
           </Typography>
         </Box>
         <Box
@@ -144,6 +159,22 @@ const Login = () => {
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             onSubmit={formik.handleSubmit}
           >
+            <FormControl fullWidth>
+              <InputLabel id="demo-simple-select-label">Role</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={role}
+                label="Role"
+                onChange={(e) => {
+                  setRole(e.target.value);
+                }}
+              >
+                <MenuItem value={"teacher"}>Teacher</MenuItem>
+                <MenuItem value={"student"}>Student</MenuItem>
+                <MenuItem value={"department"}>Admin</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               fullWidth
               label="Email"
