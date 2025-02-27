@@ -83,7 +83,6 @@ export default function Examinations() {
       );
       setExaminations(res.data.examinations || []);
     } catch (error) {
-      console.error("Error in fetching examinations:", error);
       setSnackbar({
         open: true,
         message: "Failed to fetch examinations.",
@@ -102,7 +101,7 @@ export default function Examinations() {
     validationSchema: examinationSchema,
     validateOnBlur: true,
     validateOnChange: true,
-    onSubmit: async (values, { resetForm }) => {
+    onSubmit: async (values, { setFieldValue }) => {
       const formattedDate = values.examDate
         ? dayjs(values.examDate).format("YYYY-MM-DD")
         : null;
@@ -121,11 +120,7 @@ export default function Examinations() {
           await axios.patch(`${baseApi}/examination/update/${editId}`, values, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setSnackbar({
-            open: true,
-            message: "Exam updated successfully",
-            severity: "success",
-          });
+          setSnackbar({ open: true, message: "Exam updated successfully", severity: "success" });
           setEditId(null);
         } else {
           await axios.post(
@@ -138,22 +133,16 @@ export default function Examinations() {
             },
             { headers: { Authorization: `Bearer ${token}` } }
           );
-
-          setSnackbar({
-            open: true,
-            message: "Exam created successfully!",
-            severity: "success",
-          });
+          setSnackbar({ open: true, message: "Exam created successfully!", severity: "success" });
         }
 
-        fetchExaminations(values.semester);
-        resetForm();
+        fetchExaminations(values.semester); // Keep the semester
+        setFieldValue("examDate", "");
+        setFieldValue("subject", "");
+        setFieldValue("examType", "");
+
       } catch (error) {
-        setSnackbar({
-          open: true,
-          message: "Failed to create exam.",
-          severity: "error",
-        });
+        setSnackbar({ open: true, message: "Failed to create exam.", severity: "error" });
       }
     },
   });
@@ -161,35 +150,27 @@ export default function Examinations() {
   const handleEdit = (exam) => {
     setEditId(exam._id);
     formik.setValues({
-      examDate: exam.examDate, // Ensure correct field name
-      semester: exam.semester?._id || "", // Keep semester selected
+      examDate: exam.examDate,
+      semester: exam.semester?._id || "",
       subject: exam.subject?._id || "",
       examType: exam.examType,
     });
   };
 
   const handleDelete = async (id) => {
-   if(confirm("Are you sure You want to delete?")){
-    try {
-      await axios.get(`${baseApi}/examination/delete/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSnackbar({
-        open: true,
-        message: "exam deleted successfully",
-        severity: "success",
-      });
-      fetchSemesters();
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: "Error deleting Exam",
-        severity: "error",
-      });
-      console.error("Error deleting Exam:", error);
+    if (confirm("Are you sure You want to delete?")) {
+      try {
+        await axios.get(`${baseApi}/examination/delete/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSnackbar({ open: true, message: "Exam deleted successfully", severity: "success" });
+        fetchExaminations(formik.values.semester); // Refresh exams without resetting semester
+      } catch (error) {
+        setSnackbar({ open: true, message: "Error deleting Exam", severity: "error" });
+      }
     }
-   }
   };
+
 
   return (
     <>
@@ -321,7 +302,7 @@ export default function Examinations() {
               examinations.map((exam) => (
                 <TableRow key={exam._id}>
                   <TableCell align="left">
-                    {dayjs(exam.date).format("DD/MM/YYYY")}
+                    {dayjs(exam.examDate).format("DD/MM/YYYY")}
                   </TableCell>
                   <TableCell align="left">
                     {exam.subject?.subject_name || "N/A"}

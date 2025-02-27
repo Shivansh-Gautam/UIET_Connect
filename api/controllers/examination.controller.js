@@ -69,10 +69,10 @@ module.exports = {
     try {
       const departmentId = req.user.departmentId;
       const examinationId = req.params.id;
-      const { date, subjectId, examType } = req.body;
+      const { examDate, subjectId, examType } = req.body;
       await Examination.findOneAndUpdate(
         { _id: examinationId, department: departmentId },
-        { $set: { examDate: date, subject: subjectId, examType: examType } }
+        { $set: { examDate: examDate, subject: subjectId, examType: examType } }
       );
       res.status(200).json({
         success: true,

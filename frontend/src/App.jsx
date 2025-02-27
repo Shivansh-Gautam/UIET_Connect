@@ -30,6 +30,7 @@ import ScheduleStudent from "./student/components/schedule/ScheduleStudent";
 import ProtectedRoute from "./guard/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import LogOut from "./client/components/logout/LogOut";
+import Notes from "./student/components/notes/Notes";
 
 
 function App() {
@@ -68,6 +69,7 @@ function App() {
           >
             <Route index element={<StudentDetails />} />
             <Route path="attendance" element={<AttendanceStudent />} />
+            <Route path="notes" element={<Notes />} />
             <Route path="examinations" element={<ExaminationsStudent />} />
             <Route path="notice" element={<NoticeStudent />} />
             <Route path="schedule" element={<ScheduleStudent />} />

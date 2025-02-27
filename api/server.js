@@ -11,6 +11,7 @@ const studentRouter = require("./routers/student.router");
 const teacherRouter = require("./routers/teacher.router");
 const examinationRouter = require("./routers/examination.router");
 const noticeRouter = require("./routers/notice.router");
+const scheduleRouter = require("./routers/schedule.router");
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use("/api/student", studentRouter);
 app.use("/api/teacher", teacherRouter);
 app.use("/api/examination", examinationRouter);
 app.use("/api/notice", noticeRouter);
+app.use("/api/schedule", scheduleRouter);
 
 // Handle Undefined Routes
 app.use((req, res, next) => {

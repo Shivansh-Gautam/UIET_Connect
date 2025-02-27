@@ -30,7 +30,10 @@ import SubjectIcon from "@mui/icons-material/Subject";
 import ExplicitIcon from "@mui/icons-material/Explicit";
 import RecentActorsIcon from "@mui/icons-material/RecentActors";
 import ClassIcon from "@mui/icons-material/Class";
-import HomeIcon from '@mui/icons-material/Home';
+import HomeIcon from "@mui/icons-material/Home";
+import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
+import LogoutIcon from '@mui/icons-material/Logout';
+
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -127,6 +130,7 @@ export default function Student() {
     { link: "/", component: "Home", icon: HomeIcon },
 
     { link: "/student", component: "Your Details", icon: DashboardIcon },
+    { link: "/student/notes", component: "Notes", icon: DocumentScannerIcon },
 
     {
       link: "/student/notice",
@@ -143,6 +147,11 @@ export default function Student() {
       link: "/student/attendance",
       component: "Attendance",
       icon: RecentActorsIcon,
+    },
+    {
+      link: "/logout",
+      component: "Log Out",
+      icon: LogoutIcon,
     },
   ];
 
