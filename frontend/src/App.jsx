@@ -31,6 +31,7 @@ import ProtectedRoute from "./guard/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import LogOut from "./client/components/logout/LogOut";
 import Notes from "./student/components/notes/Notes";
+import HomeOut from "./client/components/homeout/HomeOut";
 
 
 function App() {
@@ -96,6 +97,7 @@ function App() {
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="logout" element={<LogOut />} />
+            <Route path="homeout" element={<HomeOut />} />
           </Route>
         </Routes>
       </BrowserRouter>

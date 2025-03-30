@@ -127,7 +127,7 @@ export default function Teacher() {
   };
 
   const navArr = [
-    { link: "/", component: "Home", icon: HomeIcon },
+    { link: "/homeout", component: "Home", icon: HomeIcon },
     { link: "/teacher", component: "Your Details", icon: DashboardIcon },
 
     {

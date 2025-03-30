@@ -126,7 +126,7 @@ export default function Department() {
   };
 
   const navArr = [
-    { link: "/", component: "Home", icon: HomeIcon },
+    { link: "/homeout", component: "Home", icon: HomeIcon },
 
     { link: "/department", component: "Dashboard", icon: DashboardIcon },
     { link: "/department/class", component: "Class", icon: ClassIcon },

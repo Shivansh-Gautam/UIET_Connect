@@ -13,6 +13,10 @@ export const registerSchema = yup.object({
     .string()
     .min(6, "Hod name must contain 6 characters")
     .required("Hod name is required"),
+  passcode: yup
+    .string()
+    .min(6, "passcode must contain 6 characters")
+    .required("passcode is required").oneOf(["Csjmu@123"],"enter correct passcode to register yourself"),
   password: yup
     .string()
     .min(8, "password must contain 8 characters")

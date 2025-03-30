@@ -1,38 +1,29 @@
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import { Button, TextField, MenuItem } from "@mui/material"; // ✅ Import MenuItem
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { Button, TextField, MenuItem } from "@mui/material";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import ScheduleEvent from "./ScheduleEvent";
 import { baseApi } from "../../../environment";
 
-const localizer = momentLocalizer(moment);
-
 export default function Schedule() {
   const [newPeriod, setNewPeriod] = useState(false);
   const [semesters, setSemesters] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState(""); // ✅ Initialize as ""
-  const token = localStorage.getItem("authToken"); // Fetch auth token from local storage
-
-  const myEventsList = [
-    {
-      id: 1,
-      title: "History Class - Mr. Hamid",
-      start: new Date(2025, 1, 26, 11, 30),
-      end: new Date(2025, 1, 26, 14, 30),
-    },
-    {
-      id: 2,
-      title: "Math Class - Ms. Sarah",
-      start: new Date(2025, 1, 27, 9, 0),
-      end: new Date(2025, 1, 27, 11, 0),
-    },
-  ];
+  const [selectedSemester, setSelectedSemester] = useState("");
+  const [events, setEvents] = useState([]);
+  const token = localStorage.getItem("authToken");
 
   useEffect(() => {
     fetchSemesters();
   }, []);
+
+  useEffect(() => {
+    if (selectedSemester) {
+      fetchSchedule();
+    }
+  }, [selectedSemester]);
 
   const fetchSemesters = async () => {
     try {
@@ -40,10 +31,58 @@ export default function Schedule() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSemesters(response.data.data);
-      setSelectedSemester(response.data.data[0]._id);
+      if (response.data.data.length > 0) {
+        setSelectedSemester(response.data.data[0]._id);
+      }
     } catch (error) {
       console.error("Error fetching semesters:", error);
     }
+  };
+
+  const fetchSchedule = async () => {
+    try {
+      const response = await axios.get(`${baseApi}/schedule/fetch-with-semester/${selectedSemester}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const formattedEvents = response.data.data.map((event) => {
+        const subjectName = event.subject?.subject_name || "Unknown Subject";
+        const teacherName = event.teacher?.name || "Unknown Teacher";
+        const day = event.day; // 0 (Sunday) to 6 (Saturday)
+
+        if (day === undefined || day < 1 || day > 6) return null; // Only Monday-Saturday
+
+        return {
+          id: event._id,
+          title: `${subjectName} - ${teacherName}`,
+          daysOfWeek: [day], // FullCalendar uses 0 (Sunday) - 6 (Saturday)
+          startTime: event.startTime,
+          endTime: event.endTime,
+        };
+      }).filter(event => event !== null);
+
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error("Error fetching schedule:", error);
+    }
+  };
+
+  const handleEventAdded = (newEvent) => {
+    if (!newEvent || !newEvent.subject || !newEvent.teacher) return;
+
+    setEvents((prevEvents) => [
+      ...prevEvents,
+      {
+        id: newEvent._id,
+        title: `${newEvent.subject?.subject_name || "Unknown Subject"} - ${newEvent.teacher?.name || "Unknown Teacher"}`,
+        daysOfWeek: [newEvent.day],
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+      },
+    ]);
+
+    setTimeout(fetchSchedule, 500);
+    setNewPeriod(false);
   };
 
   return (
@@ -53,10 +92,10 @@ export default function Schedule() {
         fullWidth
         label="Semester"
         variant="outlined"
-        value={selectedSemester} // ✅ Ensure it's never null
+        value={selectedSemester}
         onChange={(e) => setSelectedSemester(e.target.value)}
       >
-        <MenuItem value="">Select Semester</MenuItem> {/* ✅ Default option */}
+        <MenuItem value="">Select Semester</MenuItem>
         {semesters.map((x) => (
           <MenuItem key={x._id} value={x._id}>
             {x.semester_text} ({x.semester_num})
@@ -64,23 +103,29 @@ export default function Schedule() {
         ))}
       </TextField>
 
-      <Button onClick={() => setNewPeriod(true)}>Add New Period</Button>
+      <Button onClick={() => setNewPeriod(true)} disabled={!selectedSemester}>
+        Add New Period
+      </Button>
 
-      {newPeriod && <ScheduleEvent selectedSemester={selectedSemester} />}
+      {newPeriod && (
+        <ScheduleEvent selectedSemester={selectedSemester} onEventAdded={handleEventAdded} />
+      )}
 
-      <Calendar
-        localizer={localizer}
-        events={myEventsList}
-        defaultView="week"
-        views={["week", "day", "agenda"]}
-        step={30}
-        timeslots={2}
-        min={new Date(2025, 1, 26, 8, 0, 0)}
-        max={new Date(2025, 1, 26, 20, 0, 0)}
-        startAccessor="start"
-        endAccessor="end"
-        defaultDate={new Date()}
-        style={{ height: "100%", width: "100%" }}
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="timeGridWeek"
+        events={events}
+        headerToolbar={{
+          left: "prev,next today",
+          center: "title",
+          right: "timeGridWeek,timeGridDay",
+        }}
+        slotMinTime="08:00:00"
+        slotMaxTime="20:00:00"
+        allDaySlot={false}
+        editable={false}
+        selectable={false}
+        height="80vh"
       />
     </div>
   );

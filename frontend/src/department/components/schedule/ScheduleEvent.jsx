@@ -3,17 +3,19 @@ import { periodSchema } from "../../../yupSchema/periodSchema";
 import { baseApi } from "../../../environment";
 import axios from "axios";
 import { useFormik } from "formik";
-import { Box, MenuItem, TextField, Button } from "@mui/material";
+import { Box, MenuItem, TextField, Button, Typography } from "@mui/material";
+import SnackbarAlert from "../../../basic utility components/snackbar/SnackbarAlert";
 
-export default function ScheduleEvent({ selectedSemester }) {
+export default function ScheduleEvent({ selectedSemester, onEventAdded }) {
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
   const periods = [
-    { id: 1, label: "Period 1 (10:00 AM - 11:00 AM)", startTime: "10:00", endTime: "11:00" },
-    { id: 2, label: "Period 2 (11:00 AM - 12:00 PM)", startTime: "11:00", endTime: "12:00" },
-    { id: 3, label: "Period 3 (12:00 PM - 1:00 PM)", startTime: "12:00", endTime: "1:00" },
-    { id: 4, label: "Lunch Break (1:00 PM - 2:00 PM)", startTime: "1:00", endTime: "2:00" },
-    { id: 5, label: "Period 4 (2:00 PM - 3:00 PM)", startTime: "2:00", endTime: "3:00" },
-    { id: 6, label: "Period 5 (3:00 PM - 4:00 PM)", startTime: "3:00", endTime: "4:00" },
-    { id: 7, label: "Period 6 (4:00 PM - 5:00 PM)", startTime: "4:00", endTime: "5:00" },
+    { id: 1, label: "Monday", day: 1 },
+    { id: 2, label: "Tuesday", day: 2 },
+    { id: 3, label: "Wednesday", day: 3 },
+    { id: 4, label: "Thursday", day: 4 },
+    { id: 5, label: "Friday", day: 5 },
+    { id: 6, label: "Saturday", day: 6 },
   ];
 
   const [teachers, setTeachers] = useState([]);
@@ -22,30 +24,29 @@ export default function ScheduleEvent({ selectedSemester }) {
   useEffect(() => {
     if (selectedSemester) {
       fetchData();
+      formik.setFieldValue("semester", selectedSemester); // Set semester field when selectedSemester changes
     }
-  }, [selectedSemester]); // Runs whenever selectedSemester changes
+  }, [selectedSemester]);
 
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("authToken");
 
-      // Fetch Teachers
-      const teacherResponse = await axios.get(`${baseApi}/teacher/fetch-with-query`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const [teacherResponse, subjectResponse] = await Promise.all([
+        axios.get(`${baseApi}/teacher/fetch-with-query`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${baseApi}/subject/fetch-with-query`, {
+          params: { student_class: selectedSemester },
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-      // Fetch Subjects based on semester
-      const subjectResponse = await axios.get(`${baseApi}/subject/fetch-with-query`, {
-        params: { student_class: selectedSemester },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      console.log("Fetched Subjects Response:", subjectResponse.data); // Debugging log
-
-      setTeachers(teacherResponse.data.teachers);
-      setSubjects(subjectResponse.data.subjects); // Ensure array format
+      setTeachers(teacherResponse.data.teachers || []);
+      setSubjects(subjectResponse.data.subjects || []);
     } catch (error) {
       console.error("Error fetching data:", error);
+      setSnackbar({ open: true, message: "Failed to fetch data", severity: "error" });
     }
   };
 
@@ -53,45 +54,57 @@ export default function ScheduleEvent({ selectedSemester }) {
     initialValues: {
       teacher: "",
       subject: "",
-      period: "",
-      date: "",
+      semester: selectedSemester || "", // Set semester value dynamically
+      day: "", 
+      startTime: "",
+      endTime: "",
     },
     validationSchema: periodSchema,
-    onSubmit: async (values) => {
-      let date = new Date(values.date);
-      let [startTime, endTime] = values.period.split(",");
-
-      const scheduleData = {
-        teacher: values.teacher,
-        subject: values.subject,
-        semester: selectedSemester, 
-        startTime: new Date(date.setHours(startTime.split(":")[0], startTime.split(":")[1])),
-        endTime: new Date(date.setHours(endTime.split(":")[0], endTime.split(":")[1])),
-      };
-
-      console.log("Sending Schedule Data:", scheduleData); 
-
+    onSubmit: async (values, { resetForm }) => {
       try {
+        const token = localStorage.getItem("authToken");
+
+        const scheduleData = {
+          teacher: values.teacher,
+          subject: values.subject,
+          semester:selectedSemester,
+          day: values.day, // Ensure it's a number
+          startTime: values.startTime,
+          endTime: values.endTime,
+        };
+
+        console.log("Submitting schedule:", scheduleData); // Debugging
+
         const response = await axios.post(`${baseApi}/schedule/create`, scheduleData, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Response:", response.data);
+
+        console.log("Schedule saved successfully:", response.data);
+        setSnackbar({ open: true, message: "Schedule added successfully", severity: "success" });
+
+        resetForm();
+        onEventAdded(); // Call the callback to update the UI
       } catch (error) {
         console.error("Error saving schedule:", error.response?.data || error);
+        setSnackbar({ open: true, message: error.response?.data?.message || "Error saving schedule", severity: "error" });
       }
-    },
+    }
   });
 
   return (
     <>
-      <h1>Schedule Event</h1>
+      <Typography variant="h5" gutterBottom>
+        Schedule Event
+      </Typography>
       <Box component="form" sx={{ display: "flex", flexDirection: "column", gap: 2 }} onSubmit={formik.handleSubmit}>
         <TextField
           select
           fullWidth
           label="Teacher"
           variant="outlined"
-          {...formik.getFieldProps("teacher")}
+          name="teacher"
+          value={formik.values.teacher}
+          onChange={formik.handleChange}
           error={formik.touched.teacher && Boolean(formik.errors.teacher)}
           helperText={formik.touched.teacher && formik.errors.teacher}
         >
@@ -107,7 +120,9 @@ export default function ScheduleEvent({ selectedSemester }) {
           fullWidth
           label="Subject"
           variant="outlined"
-          {...formik.getFieldProps("subject")}
+          name="subject"
+          value={formik.values.subject}
+          onChange={formik.handleChange}
           error={formik.touched.subject && Boolean(formik.errors.subject)}
           helperText={formik.touched.subject && formik.errors.subject}
         >
@@ -125,14 +140,16 @@ export default function ScheduleEvent({ selectedSemester }) {
         <TextField
           select
           fullWidth
-          label="Period"
+          label="Day"
           variant="outlined"
-          {...formik.getFieldProps("period")}
-          error={formik.touched.period && Boolean(formik.errors.period)}
-          helperText={formik.touched.period && formik.errors.period}
+          name="day"
+          value={formik.values.day}
+          onChange={(e) => formik.setFieldValue("day", Number(e.target.value))} // Ensure number type
+          error={formik.touched.day && Boolean(formik.errors.day)}
+          helperText={formik.touched.day && formik.errors.day}
         >
           {periods.map((x) => (
-            <MenuItem key={x.id} value={`${x.startTime},${x.endTime}`}>
+            <MenuItem key={x.id} value={x.id}>
               {x.label}
             </MenuItem>
           ))}
@@ -140,12 +157,27 @@ export default function ScheduleEvent({ selectedSemester }) {
 
         <TextField
           fullWidth
-          type="date"
-          label="Date"
+          label="Start Time"
+          type="time"
           variant="outlined"
-          {...formik.getFieldProps("date")}
-          error={formik.touched.date && Boolean(formik.errors.date)}
-          helperText={formik.touched.date && formik.errors.date}
+          name="startTime"
+          value={formik.values.startTime}
+          onChange={formik.handleChange}
+          error={formik.touched.startTime && Boolean(formik.errors.startTime)}
+          helperText={formik.touched.startTime && formik.errors.startTime}
+          InputLabelProps={{ shrink: true }}
+        />
+
+        <TextField
+          fullWidth
+          label="End Time"
+          type="time"
+          variant="outlined"
+          name="endTime"
+          value={formik.values.endTime}
+          onChange={formik.handleChange}
+          error={formik.touched.endTime && Boolean(formik.errors.endTime)}
+          helperText={formik.touched.endTime && formik.errors.endTime}
           InputLabelProps={{ shrink: true }}
         />
 
@@ -153,6 +185,13 @@ export default function ScheduleEvent({ selectedSemester }) {
           Submit
         </Button>
       </Box>
+
+      <SnackbarAlert
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      />
     </>
   );
 }

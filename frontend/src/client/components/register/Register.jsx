@@ -48,6 +48,7 @@ const Register = () => {
       hod_name: "",
       password: "",
       confirm_password: "",
+      passcode:"",
     },
     validationSchema: registerSchema,
     onSubmit: async (values) => {
@@ -249,6 +250,14 @@ const Register = () => {
                 formik.touched.confirm_password &&
                 formik.errors?.confirm_password
               }
+            />
+            <TextField
+              fullWidth
+              label="Enter Passcode to Register"
+              variant="outlined"
+              {...formik.getFieldProps("passcode")}
+              error={formik.touched.passcode && Boolean(formik.errors.passcode)}
+              helperText={formik.touched.passcode && formik.errors?.passcode}
             />
             <Button fullWidth variant="contained" color="primary" type="submit">
               Register

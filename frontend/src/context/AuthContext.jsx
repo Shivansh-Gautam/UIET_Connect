@@ -32,9 +32,15 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("authToken"); // Remove token from localStorage
     localStorage.removeItem("user"); // Remove user from localStorage
   };
+  const homeout = () => {
+    setAuthenticated(false);
+    setUser(null);
+    localStorage.removeItem("authToken"); // Remove token from localStorage
+    localStorage.removeItem("user"); // Remove user from localStorage
+  };
 
   return (
-    <AuthContext.Provider value={{ authenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ authenticated, user, login, logout, homeout }}>
       {children}
     </AuthContext.Provider>
   );

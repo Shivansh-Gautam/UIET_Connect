@@ -17,6 +17,38 @@ module.exports = {
         .json({ success: false, message: "server error in getting classes" });
     }
   },
+  getTeacherNotices: async (req, res) => {
+    try {
+      const departmentId = req.user.departmentId;
+      const allNotices = await Notice.find({ department: departmentId, audience:"teacher" });
+      res.status(200).json({
+        success: true,
+        message: "success in fetching all notice",
+        data: allNotices,
+      });
+    } catch (error) {
+      console.log("getallnotices error", error);
+      res
+        .status(500)
+        .json({ success: false, message: "server error in getting classes" });
+    }
+  },
+  getStudentNotices: async (req, res) => {
+    try {
+      const departmentId = req.user.departmentId;
+      const allNotices = await Notice.find({ department: departmentId, audience:"student" });
+      res.status(200).json({
+        success: true,
+        message: "success in fetching all notice",
+        data: allNotices,
+      });
+    } catch (error) {
+      console.log("getallnotices error", error);
+      res
+        .status(500)
+        .json({ success: false, message: "server error in getting classes" });
+    }
+  },
 
   createNotice: async (req, res) => {
     try {

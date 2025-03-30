@@ -9,7 +9,7 @@ const {
 const router = express.Router();
 
 router.post("/create", authMiddleware(["DEPARTMENT"]), createSemester);
-router.get("/all", authMiddleware(["DEPARTMENT"]), getAllSemesters);
+router.get("/all", authMiddleware(["DEPARTMENT","TEACHER","STUDENT"]), getAllSemesters);
 router.patch(
   "/update/:id",
   authMiddleware(["DEPARTMENT"]),

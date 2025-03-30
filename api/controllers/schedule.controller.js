@@ -2,6 +2,7 @@ const Subject = require("../models/subject.model");
 const Student = require("../models/student.model");
 const Exam = require("../models/examination.model");
 const Schedule = require("../models/schedule.model");
+
 module.exports = {
   getScheduleWithSemester: async (req, res) => {
     try {
@@ -10,57 +11,78 @@ module.exports = {
       const schedules = await Schedule.find({
         department: departmentId,
         semester: semesterId,
-      });
+      }).populate(["teacher", "subject"]);
+
       res.status(200).json({
         success: true,
-        message: "success in fetching all schedule",
+        message: "Successfully fetched all schedules",
         data: schedules,
       });
     } catch (error) {
-      console.log("get schedule error", error);
-      res
-        .status(500)
-        .json({ success: false, message: "server error in getting schedule" });
+      console.error("Error fetching schedule:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error in getting schedule",
+      });
     }
   },
 
-   createSchedule: async (req, res) => {
+  createSchedule: async (req, res) => {
     try {
-      console.log("Received Request Data:", req.body); // ✅ Log received data
-      console.log("User Data:", req.user); // ✅ Log user data to verify departmentId
-  
+      const { teacher, subject, semester, day, startTime, endTime } = req.body;
+
+      if (!day) {
+        return res.status(400).json({
+          success: false,
+          message: "Day is required for scheduling",
+        });
+      }
+
       const newSchedule = new Schedule({
-        department: req.user.departmentId,  // Ensure department is stored
-        teacher: req.body.teacher,
-        subject: req.body.subject,
-        semester: req.body.semester,  // Ensure semester is stored
-        startTime: req.body.startTime,
-        endTime: req.body.endTime,
+        department: req.user.departmentId,
+        teacher,
+        subject,
+        semester,
+        day, // Storing day instead of date
+        startTime,
+        endTime,
       });
-  
+
       await newSchedule.save();
-      res.status(200).json({ success: true, message: "Schedule created successfully", data: newSchedule });
-    } catch (err) {
-      console.error("Error creating Schedule:", err); // ✅ Log errors
-      res.status(500).json({ success: false, message: "Server error in creating schedule" });
+      res.status(200).json({
+        success: true,
+        message: "Schedule created successfully",
+        data: newSchedule,
+      });
+    } catch (error) {
+      console.error("Error creating schedule:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error in creating schedule",
+      });
     }
   },
-  
+
   updateScheduleWithId: async (req, res) => {
     try {
       let id = req.params.id;
-      await Schedule.findOneAndUpdate({ _id: id }, { $set: { ...req.body } });
-      const scheduleAfterUpdate = await Schedule.findOne({ _id: id });
+      const updatedSchedule = await Schedule.findOneAndUpdate(
+        { _id: id },
+        { $set: { ...req.body } },
+        { new: true }
+      );
+
       res.status(200).json({
         success: true,
-        message: "successfully updated Schedule",
-        data: scheduleAfterUpdate,
+        message: "Schedule updated successfully",
+        data: updatedSchedule,
       });
     } catch (error) {
-      console.log("updating Schedule error", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Server error in updating Schedule" });
+      console.error("Error updating schedule:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error in updating schedule",
+      });
     }
   },
 
@@ -70,14 +92,17 @@ module.exports = {
       let departmentId = req.user.departmentId;
 
       await Schedule.findOneAndDelete({ _id: id, department: departmentId });
-      res
-        .status(200)
-        .json({ success: true, message: "successfully deleted Schedule" });
+
+      res.status(200).json({
+        success: true,
+        message: "Schedule deleted successfully",
+      });
     } catch (error) {
-      console.log("deleting Schedule error", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Server error in deleting Schedule" });
+      console.error("Error deleting schedule:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error in deleting schedule",
+      });
     }
   },
 };
