@@ -3,8 +3,8 @@ const Notice = require("../models/notice.model");
 module.exports = {
   getAllNotices: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
-      const allNotices = await Notice.find({ department: departmentId });
+      const department = req.user.department;
+      const allNotices = await Notice.find({ department: department });
       res.status(200).json({
         success: true,
         message: "success in fetching all notice",
@@ -19,8 +19,8 @@ module.exports = {
   },
   getTeacherNotices: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
-      const allNotices = await Notice.find({ department: departmentId, audience:"teacher" });
+      const department = req.user.department;
+      const allNotices = await Notice.find({ department: department, audience:"teacher" });
       res.status(200).json({
         success: true,
         message: "success in fetching all notice",
@@ -35,8 +35,8 @@ module.exports = {
   },
   getStudentNotices: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
-      const allNotices = await Notice.find({ department: departmentId, audience:"student" });
+      const department = req.user.department;
+      const allNotices = await Notice.find({ department: department, audience:"student" });
       res.status(200).json({
         success: true,
         message: "success in fetching all notice",
@@ -54,7 +54,7 @@ module.exports = {
     try {
       const { title, message, audience } = req.body;
       const newNotice = new Notice({
-        department: req.user.departmentId,
+        department: req.user.department,
         title: title,
         message: message,
         audience: audience,
@@ -91,9 +91,9 @@ module.exports = {
   deleteNoticeWithId: async (req, res) => {
     try {
       let id = req.params.id;
-      let departmentId = req.user.departmentId;
+      let department = req.user.department;
 
-        await Notice.findOneAndDelete({ _id: id, department: departmentId });
+        await Notice.findOneAndDelete({ _id: id, department: department });
         res
           .status(200)
           .json({ success: true, message: "successfully deleted notice" });

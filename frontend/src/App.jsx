@@ -1,7 +1,6 @@
 import "./App.css";
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Department from "./department/department";
 import AttendanceStudentsList from "./department/components/attendance/AttendanceStudentsList";
 import Examinations from "./department/components/examinations/Examinations";
 import Notice from "./department/components/notice/Notice";
@@ -32,7 +31,8 @@ import { AuthProvider } from "./context/AuthContext";
 import LogOut from "./client/components/logout/LogOut";
 import Notes from "./student/components/notes/Notes";
 import HomeOut from "./client/components/homeout/HomeOut";
-
+import NotesTeacher from "./teacher/components/notes/NotesTeacher";
+import Department from "./department/Department";
 
 function App() {
   return (
@@ -86,6 +86,7 @@ function App() {
           >
             <Route index element={<TeacherDetails />} />
             <Route path="attendance" element={<AttendanceTeacher />} />
+            <Route path="notes" element={<NotesTeacher />} />
             <Route path="examinations" element={<ExaminationsTeacher />} />
             <Route path="notice" element={<NoticeTeacher />} />
             <Route path="schedule" element={<ScheduleTeacher />} />

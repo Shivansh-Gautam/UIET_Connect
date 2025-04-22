@@ -6,10 +6,10 @@ const Schedule = require("../models/schedule.model");
 module.exports = {
   getScheduleWithSemester: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const semesterId = req.params.id;
       const schedules = await Schedule.find({
-        department: departmentId,
+        department: department,
         semester: semesterId,
       }).populate(["teacher", "subject"]);
 
@@ -39,7 +39,7 @@ module.exports = {
       }
 
       const newSchedule = new Schedule({
-        department: req.user.departmentId,
+        department: req.user.department,
         teacher,
         subject,
         semester,
@@ -89,9 +89,9 @@ module.exports = {
   deleteScheduleWithId: async (req, res) => {
     try {
       let id = req.params.id;
-      let departmentId = req.user.departmentId;
+      let department = req.user.department;
 
-      await Schedule.findOneAndDelete({ _id: id, department: departmentId });
+      await Schedule.findOneAndDelete({ _id: id, department: department });
 
       res.status(200).json({
         success: true,

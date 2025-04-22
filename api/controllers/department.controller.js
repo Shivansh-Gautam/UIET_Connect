@@ -72,7 +72,7 @@ module.exports = {
           const token = jwt.sign(
             {
               id: department._id,
-              department_id: department._id,
+              department: department._id, 
               department_name: department.department_name,
               image_url: department.department_image,
               hod_name: department.hod_name,
@@ -80,6 +80,7 @@ module.exports = {
             },
             jwtSecret
           );
+          
 
           res.header("Authorization", token);
           res.status(200).json({

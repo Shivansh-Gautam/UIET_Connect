@@ -1,7 +1,13 @@
-export default function StudentDetails() {
+import Greeting from "../../../basic utility components/Greeting";
+import StudentProfile from "./StudentProfile";
+
+const StudentDetails = () => {
   return (
     <>
-      <h1>StudentDetails </h1>
+      <Greeting role={"student"} apiEndpoint={"student/fetch-single"} />
+      <StudentProfile />
     </>
   );
-}
+};
+
+export default StudentDetails;

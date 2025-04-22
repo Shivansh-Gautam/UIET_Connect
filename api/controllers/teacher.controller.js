@@ -45,7 +45,7 @@ module.exports = {
             //   password: { type: string, required: true },
 
 
-            department: req.user.departmentId,
+            department: req.user.department,
             email: fields.email[0],
             name: fields.name[0],
             gender: fields.gender[0],
@@ -73,53 +73,63 @@ module.exports = {
   //login for Teacher
   loginTeacher: async (req, res) => {
     try {
-      const teacher = await Teacher.findOne({ email: req.body.email });
-      if (teacher) {
-        const isAuth = bcrypt.compareSync(req.body.password, teacher.password);
-        if (isAuth) {
-          const jwtSecret = process.env.JWT_SECRET;
-          const token = jwt.sign(
-            {
-              id: teacher._id,
-              department_id: teacher.department,
-              name: teacher.teacher_name,
-              image_url: teacher.teacher_image,
-              role: "TEACHER",
-            },
-            jwtSecret
-          );
-
-          res.header("Authorization", token);
-          res.status(200).json({
-            success: true,
-            message: "successfully login",
-            user: {
-              id: teacher._id,
-              departmentId: teacher.department,
-              teacher_name: teacher.teacher_name,
-              image_url: teacher.teacher_image,
-              role: "TEACHER",
-            },
-          });
-        } else {
-          res.status(401).json({ success: false, message: "invalid password" });
-        }
-      } else {
-        res.status(401).json({ success: false, message: "Teacher not found" });
+      const { email, password } = req.body;
+      const teacher = await Teacher.findOne({ email });
+  
+      if (!teacher) {
+        return res.status(401).json({ success: false, message: "Teacher not found" });
       }
+  
+      const isAuth = bcrypt.compareSync(password, teacher.password);
+  
+      if (!isAuth) {
+        return res.status(401).json({ success: false, message: "Invalid password" });
+      }
+  
+      const jwtSecret = process.env.JWT_SECRET;
+      const token = jwt.sign(
+        {
+          id: teacher._id,
+          department: teacher.department, // use consistent naming (camelCase)
+          name: teacher.teacher_name,
+          imageUrl: teacher.teacher_image,
+          role: "TEACHER",
+        },
+        jwtSecret,
+        { expiresIn: "1d" } // Always good to expire token
+      );
+  
+      res
+        .header("Authorization", token)
+        .status(200)
+        .json({
+          success: true,
+          message: "Successfully logged in",
+          token, // send token in body also for easier frontend handling
+          user: {
+            id: teacher._id,
+            department: teacher.department,
+            name: teacher.teacher_name,
+            imageUrl: teacher.teacher_image,
+            role: "TEACHER",
+          },
+        });
+        
     } catch (error) {
+      console.error("[Teacher Login Error]:", error.message);
       res.status(500).json({
         success: false,
-        message: "internal server error:[Teacher login].",
+        message: "Internal Server Error: [Teacher login]",
       });
     }
   },
+  
   // get all Teacher data
   getTeachersWithQuery: async (req, res) => {
     try {
       const filterQuery = {};
-      const departmentId = req.user.departmentId;
-      filterQuery["department"] = departmentId;
+      const department = req.user.department;
+      filterQuery["department"] = department;
 
       if (req.query.hasOwnProperty("search")) {
         filterQuery["name"] = { $regex: req.query.search, $options: "i" };
@@ -143,10 +153,10 @@ module.exports = {
   getTeacherOwnData: async (req, res) => {
     try {
       const id = req.user.id;
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const teacher = await Teacher.findOne({
         _id: id,
-        department: departmentId,
+        department: department,
       }).select(["-password"]);
       if (teacher) {
         res.status(200).json({ success: true, teacher });
@@ -163,10 +173,10 @@ module.exports = {
   getTeacherWithId: async (req, res) => {
     try {
       const id = req.params.id;
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const teacher = await Teacher.findOne({
         _id: id,
-        department: departmentId,
+        department: department,
       }).select(["-password"]);
       if (teacher) {
         res.status(200).json({ success: true, teacher });
@@ -234,10 +244,10 @@ module.exports = {
   deleteTeacherWithId: async (req, res) => {
     try {
       const id = req.params.id;
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const teacher = await Teacher.findOneAndDelete({
         _id: id,
-        department: departmentId,
+        department: department,
       });
       if (!teacher) {
         return res

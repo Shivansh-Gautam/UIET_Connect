@@ -3,10 +3,10 @@ const Examination = require("../models/examination.model");
 module.exports = {
   newExamination: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const { date, subjectId, examType, semesterId } = req.body;
       const newExamination = new Examination({
-        department: departmentId,
+        department: department,
         examDate: date,
         examType: examType,
         subject: subjectId,
@@ -27,8 +27,8 @@ module.exports = {
   },
   getAllExaminations: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
-      const examinations = await Examination.find({ department: departmentId })
+      const department = req.user.department;
+      const examinations = await Examination.find({ department: department })
         .populate("subject", "subject_name")
         .populate("semester", "semester_text semester_num");
 
@@ -45,11 +45,11 @@ module.exports = {
 
   getExaminationsBySemester: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const semesterId = req.params.id;
       const examinations = await Examination.find({
         semester: semesterId,
-        department: departmentId,
+        department: department,
       })
         .populate("subject", "subject_name")
         .populate("semester", "semester_text semester_num");
@@ -67,11 +67,11 @@ module.exports = {
 
   updateExaminaionWithId: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const examinationId = req.params.id;
       const { examDate, subjectId, examType } = req.body;
       await Examination.findOneAndUpdate(
-        { _id: examinationId, department: departmentId },
+        { _id: examinationId, department: department },
         { $set: { examDate: examDate, subject: subjectId, examType: examType } }
       );
       res.status(200).json({
@@ -86,12 +86,12 @@ module.exports = {
   },
   deleteExaminaionWithId: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const examinationId = req.params.id;
 
       await Examination.findOneAndDelete({
         _id: examinationId,
-        department: departmentId,
+        department: department,
       });
       res.status(200).json({
         success: true,

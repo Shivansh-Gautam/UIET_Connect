@@ -26,6 +26,7 @@
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
     "formik": "^2.4.6",
+    "framer-motion": "^12.7.4",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.47",
     "react": "^19.0.0",

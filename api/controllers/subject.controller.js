@@ -5,8 +5,8 @@ const Schedule = require("../models/schedule.model");
 module.exports = {
   getAllSubjects: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
-      const allSubjects = await Subject.find({ department: departmentId });
+      const department = req.user.department;
+      const allSubjects = await Subject.find({ department: department });
       res.status(200).json({
         success: true,
         message: "success in fetching all Subject",
@@ -23,7 +23,7 @@ module.exports = {
   createSubject: async (req, res) => {
     try {
       const newSubject = new Subject({
-        department: req.user.departmentId,
+        department: req.user.department,
         subject_name: req.body.subject_name,
         subject_codename: req.body.subject_codename,
         student_class: req.body.student_class,
@@ -60,17 +60,17 @@ module.exports = {
   deleteSubjectWithId: async (req, res) => {
     try {
       let id = req.params.id;
-      let departmentId = req.user.departmentId;
+      let department = req.user.department;
 
       const SubjectExamCount = (
-        await Exam.find({ subject: id, department: departmentId })
+        await Exam.find({ subject: id, department: department })
       ).length;
       const SubjectScheduleCount = (
-        await Schedule.find({ subject: id, department: departmentId })
+        await Schedule.find({ subject: id, department: department })
       ).length;
 
       if (SubjectExamCount === 0 && SubjectScheduleCount === 0) {
-        await Subject.findOneAndDelete({ _id: id, department: departmentId });
+        await Subject.findOneAndDelete({ _id: id, department: department });
         res
           .status(200)
           .json({ success: true, message: "successfully deleted Subject" });
@@ -90,8 +90,8 @@ module.exports = {
   getSubjectsWithQuery: async (req, res) => {
     try {
       const filterQuery = {};
-      const departmentId = req.user.departmentId;
-      filterQuery["department"] = departmentId;
+      const department = req.user.department;
+      filterQuery["department"] = department;
 
       if (req.query.hasOwnProperty("student_class")) {
         filterQuery["student_class"] = req.query.student_class;

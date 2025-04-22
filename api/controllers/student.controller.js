@@ -34,7 +34,7 @@ module.exports = {
           const salt = bcrypt.genSaltSync(10);
           const hashPassword = bcrypt.hashSync(fields.password[0], salt);
           const newStudent = new Student({
-            department: req.user.departmentId,
+            department: req.user.department,
             email: fields.email[0],
             name: fields.name[0],
             student_class: fields.student_class[0],
@@ -73,7 +73,7 @@ module.exports = {
           const token = jwt.sign(
             {
               id: student._id,
-              department_id: student.department,
+              department: student.department,
               name: student.student_name,
               image_url: student.student_image,
               role: "STUDENT",
@@ -87,7 +87,7 @@ module.exports = {
             message: "successfully login",
             user: {
               id: student._id,
-              departmentId: student.department,
+              department: student.department,
               student_name: student.student_name,
               image_url: student.student_image,
               role: "STUDENT",
@@ -110,8 +110,8 @@ module.exports = {
   getStudentsWithQuery: async (req, res) => {
     try {
       const filterQuery = {};
-      const departmentId = req.user.departmentId;
-      filterQuery["department"] = departmentId;
+      const department = req.user.department;
+      filterQuery["department"] = department;
 
       if (req.query.hasOwnProperty("search")) {
         filterQuery["name"] = { $regex: req.query.search, $options: "i" };
@@ -140,10 +140,10 @@ module.exports = {
   getStudentOwnData: async (req, res) => {
     try {
       const id = req.user.id;
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const student = await Student.findOne({
         _id: id,
-        department: departmentId,
+        department: department,
       }).select(["-password"]);
       if (student) {
         res.status(200).json({ success: true, student });
@@ -160,10 +160,10 @@ module.exports = {
   getStudentWithId: async (req, res) => {
     try {
       const id = req.params.id;
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const student = await Student.findOne({
         _id: id,
-        department: departmentId,
+        department: department,
       }).select(["-password"]);
       if (student) {
         res.status(200).json({ success: true, student });
@@ -231,10 +231,10 @@ module.exports = {
   deleteStudentWithId: async (req, res) => {
     try {
       const id = req.params.id;
-      const departmentId = req.user.departmentId;
+      const department = req.user.department;
       const student = await Student.findOneAndDelete({
         _id: id,
-        department: departmentId,
+        department: department,
       });
       if (!student) {
         return res

@@ -5,8 +5,8 @@ const Schedule = require("../models/schedule.model");
 module.exports = {
   getAllSemesters: async (req, res) => {
     try {
-      const departmentId = req.user.departmentId;
-      const allSemesters = await Semester.find({ department: departmentId });
+      const department = req.user.department;
+      const allSemesters = await Semester.find({ department: department });
       res.status(200).json({
         success: true,
         message: "success in fetching all semester",
@@ -23,7 +23,7 @@ module.exports = {
   createSemester: async (req, res) => {
     try {
       const newSemester = new Semester({
-        department: req.user.departmentId,
+        department: req.user.department,
         semester_text: req.body.semester_text,
         semester_num: req.body.semester_num,
       });
@@ -59,16 +59,16 @@ module.exports = {
   deleteSemesterWithId: async (req, res) => {
     try {
       let id = req.params.id;
-      let departmentId = req.user.departmentId;
+      let department = req.user.department;
 
       const semesterStudentCount = (
-        await Student.find({ student_class: id, department: departmentId })
+        await Student.find({ student_class: id, department: department })
       ).length;
       const semesterExamCount = (
-        await Exam.find({ semester: id, department: departmentId })
+        await Exam.find({ semester: id, department: department })
       ).length;
       const semesterScheduleCount = (
-        await Schedule.find({ semester: id, department: departmentId })
+        await Schedule.find({ semester: id, department: department })
       ).length;
 
       if (
@@ -76,7 +76,7 @@ module.exports = {
         semesterExamCount === 0 &&
         semesterScheduleCount === 0
       ) {
-        await Semester.findOneAndDelete({ _id: id, department: departmentId });
+        await Semester.findOneAndDelete({ _id: id, department: department });
         res
           .status(200)
           .json({ success: true, message: "successfully deleted semester" });
