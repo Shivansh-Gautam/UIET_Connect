@@ -16,12 +16,15 @@ import {
   ListItemText,
 } from "@mui/material";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Menu, MenuItem, Avatar } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 // icons
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
@@ -34,6 +37,9 @@ import ClassIcon from "@mui/icons-material/Class";
 import HomeIcon from "@mui/icons-material/Home";
 import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { baseApi } from "../environment";
+import axios from "axios";
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
 
 const drawerWidth = 240;
 
@@ -126,6 +132,19 @@ const Drawer = styled(MuiDrawer, {
 
 export default function Student() {
   const theme = useTheme();
+  const token = localStorage.getItem("authToken");
+  const [student, setStudent] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [formData, setFormData] = React.useState({});
+  const [editing, setEditing] = React.useState(false);
+  const [alert, setAlert] = React.useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const openProfileMenu = Boolean(anchorEl);
   const [open, setOpen] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -136,6 +155,14 @@ export default function Student() {
 
   const handleDrawerClose = () => {
     setOpen(false);
+  };
+
+  const handleProfileClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileClose = () => {
+    setAnchorEl(null);
   };
 
   const navArr = [
@@ -154,6 +181,11 @@ export default function Student() {
       component: "Attendance",
       icon: RecentActorsIcon,
     },
+    {
+      link: "/student/profile",
+      component: "Profile",
+      icon: AccountBoxIcon,
+    },
     { link: "/logout", component: "Log Out", icon: LogoutIcon },
   ];
 
@@ -161,31 +193,135 @@ export default function Student() {
     navigate(link);
   };
 
+  const fetchStudentDetails = async () => {
+    if (!token) {
+      setAlert({
+        open: true,
+        message: "Authorization token missing",
+        severity: "error",
+      });
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await axios.get(`${baseApi}/student/fetch-single`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStudent(response.data.student);
+      setFormData(response.data.student);
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+      setAlert({
+        open: true,
+        message: "Failed to fetch student details",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchStudentDetails();
+  }, []);
+
   return (
     <Box
       sx={{ display: "flex", backgroundColor: "#f5f7fa", minHeight: "100vh" }}
     >
       <CssBaseline />
       <AppBar position="fixed" open={open}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            onClick={handleDrawerOpen}
-            edge="start"
-            sx={{ marginRight: 5, ...(open && { display: "none" }) }}
-          >
-            <MenuIcon />
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              onClick={handleDrawerOpen}
+              edge="start"
+              sx={{ marginRight: 5, ...(open && { display: "none" }) }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={{ fontWeight: "bold" }}
+            >
+              UIET - CONNECT
+            </Typography>
+          </Box>
+
+          {/* Profile Icon */}
+          <IconButton color="inherit" onClick={handleProfileClick}>
+            <AccountCircleIcon sx={{ fontSize: 32 }} />
           </IconButton>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ fontWeight: "bold" }}
-          >
-            UIET - CONNECT
-          </Typography>
         </Toolbar>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleProfileClose}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              p: 2,
+              gap: 1,
+              minWidth: 200,
+            }}
+          >
+            <Avatar sx={{ bgcolor: "#1976d2", width: 64, height: 64 }}>
+              {student?.name ? student.name.charAt(0).toUpperCase() : "S"}
+            </Avatar>
+
+            {student ? (
+              <>
+                <Typography variant="h6" sx={{ mt: 1 }}>
+                  {student.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {student.email}
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography variant="h6" sx={{ mt: 1 }}>
+                  Loading...
+                </Typography>
+              </>
+            )}
+
+            <Divider sx={{ width: "100%", my: 1 }} />
+
+            <MenuItem
+              onClick={() => {
+                handleProfileClose();
+                navigate("/student/profile");
+              }}
+            >
+              View Profile
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                handleProfileClose();
+                navigate("/logout");
+              }}
+            >
+              Logout
+            </MenuItem>
+          </Box>
+        </Menu>
       </AppBar>
 
       <Drawer variant="permanent" open={open}>

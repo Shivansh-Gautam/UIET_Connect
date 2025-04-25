@@ -33,6 +33,7 @@ import Notes from "./student/components/notes/Notes";
 import HomeOut from "./client/components/homeout/HomeOut";
 import NotesTeacher from "./teacher/components/notes/NotesTeacher";
 import Department from "./department/Department";
+import StudentProfile from "./student/components/student details/StudentProfile";
 
 function App() {
   return (
@@ -74,6 +75,7 @@ function App() {
             <Route path="examinations" element={<ExaminationsStudent />} />
             <Route path="notice" element={<NoticeStudent />} />
             <Route path="schedule" element={<ScheduleStudent />} />
+            <Route path="profile" element={<StudentProfile />} />
           </Route>
           {/* teacher */}
           <Route

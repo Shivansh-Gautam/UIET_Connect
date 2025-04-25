@@ -1,13 +1,11 @@
-import { Box, Typography} from "@mui/material";
+import { Box, Typography, Card, CardContent } from "@mui/material";
 import axios from "axios";
 import { baseApi } from "../../../environment";
 import { useEffect, useState } from "react";
 
-
 export default function NoticeStudent() {
-  const token = localStorage.getItem("authToken"); // Fetch token
+  const token = localStorage.getItem("authToken");
   const [notices, setNotices] = useState([]);
-  
 
   const fetchNotices = async () => {
     try {
@@ -24,27 +22,54 @@ export default function NoticeStudent() {
     fetchNotices();
   }, []);
 
-  
-
-
-
   return (
-    <>
+    <Box sx={{ mt: 6, px: 3 }}>
+      <Typography variant="h4" fontWeight={700} mb={4} textAlign="center">
+        Student Notices
+      </Typography>
 
-     
-
-      <Box component="div" sx={{ display: "flex", flexDirection: "row", gap: 2, mt: 4 }}>
-        {notices.length === 0 ? (
-          <Typography variant="h6">No notice found</Typography>
-        ) : (notices.map((sem) => (
-          <Box key={sem._id} sx={{ display: "flex",flexDirection:"column",  justifyContent: "space-between", p: 2, border: "1px solid #ddd", borderRadius: 2 }}>
-            <Typography><b>Title:</b> {sem.title} </Typography>
-            <Typography><b>Message:</b> {sem.message} </Typography>
-            <Typography><b>Audience:</b> {sem.audience} </Typography>
-           
-          </Box>
-        )))}
-      </Box>
-    </>
+      {notices.length === 0 ? (
+        <Typography variant="h6" textAlign="center">
+          No notices found
+        </Typography>
+      ) : (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
+            gap: 3,
+          }}
+        >
+          {notices.map((notice) => (
+            <Card
+              key={notice._id}
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                boxShadow: 3,
+                transition: "transform 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  transform: "scale(1.03)",
+                  boxShadow: 6,
+                },
+                backgroundColor: "#f9f9f9",
+              }}
+            >
+              <CardContent>
+                <Typography variant="h6" mb={1} color="primary">
+                  {notice.title}
+                </Typography>
+                <Typography variant="body2" mb={1}>
+                  <b>Message:</b> {notice.message}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  <b>Audience:</b> {notice.audience}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
+    </Box>
   );
 }

@@ -5,7 +5,6 @@ const StudentDetails = () => {
   return (
     <>
       <Greeting role={"student"} apiEndpoint={"student/fetch-single"} />
-      <StudentProfile />
     </>
   );
 };
