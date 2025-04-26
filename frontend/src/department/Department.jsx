@@ -133,7 +133,6 @@ export default function Department() {
   };
 
   const navArr = [
-    { link: "/homeout", component: "Home", icon: HomeIcon },
     { link: "/department", component: "Dashboard", icon: DashboardIcon },
     { link: "/department/class", component: "Class", icon: ClassIcon },
     { link: "/department/subjects", component: "Subjects", icon: SubjectIcon },

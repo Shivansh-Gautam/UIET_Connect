@@ -4,6 +4,7 @@ const examinationSchema = new mongoose.Schema({
   department: { type: mongoose.Schema.ObjectId, ref: "Department" },
   examDate: { type: Date, require: true },
   examType: { type: String, require: true },
+  shift: { type: String, enum: ['Morning', 'Afternoon'] },
   subject: { type: mongoose.Schema.ObjectId, ref: "Subject" },
   semester: { type: mongoose.Schema.ObjectId, ref: "Semester" },
 

@@ -34,6 +34,7 @@ import HomeOut from "./client/components/homeout/HomeOut";
 import NotesTeacher from "./teacher/components/notes/NotesTeacher";
 import Department from "./department/Department";
 import StudentProfile from "./student/components/student details/StudentProfile";
+import IdGenerator from "./student/components/student details/IdGenerator";
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
             <Route path="notice" element={<NoticeStudent />} />
             <Route path="schedule" element={<ScheduleStudent />} />
             <Route path="profile" element={<StudentProfile />} />
+            <Route path="student-Id" element={<IdGenerator />} />
           </Route>
           {/* teacher */}
           <Route
