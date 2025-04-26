@@ -30,6 +30,9 @@ export default function Subjects() {
     severity: "success",
   });
 
+  // Search text state
+  const [searchText, setSearchText] = useState("");
+
   // Function to close the alert
   const handleAlertClose = () => {
     setAlert({ ...alert, open: false });
@@ -64,10 +67,16 @@ export default function Subjects() {
 
   // Handles selecting a semester to filter subjects
   const handleSemester = (e) => {
+    const selectedId = e.target.value;
     setParams((prevParams) => ({
       ...prevParams,
-      student_class: e.target.value || undefined,
+      student_class: selectedId || undefined,
     }));
+  };
+
+  // Handles search input change
+  const handleSearchChange = (e) => {
+    setSearchText(e.target.value);
   };
 
   // Handles editing a subject (pre-fills the form with existing data)
@@ -76,8 +85,9 @@ export default function Subjects() {
     formik.setValues({
       subject_name: subject.subject_name,
       subject_codename: subject.subject_codename,
-      student_class: subject.student_class._id,
+      student_class: subject.year?._id || "",
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handles deleting a subject
@@ -148,9 +158,14 @@ export default function Subjects() {
     validationSchema: subjectSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
+        const payload = {
+          subject_name: values.subject_name,
+          subject_codename: values.subject_codename,
+          year: values.student_class,
+        };
         if (editId) {
           // Update an existing subject
-          await axios.patch(`${baseApi}/subject/update/${editId}`, values, {
+          await axios.patch(`${baseApi}/subject/update/${editId}`, payload, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setAlert({
@@ -160,7 +175,7 @@ export default function Subjects() {
           });
         } else {
           // Add a new subject
-          await axios.post(`${baseApi}/subject/create`, values, {
+          await axios.post(`${baseApi}/subject/create`, payload, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setAlert({
@@ -182,6 +197,39 @@ export default function Subjects() {
       }
     },
   });
+
+  // Map of student_class._id to year names
+  const yearMap = {
+    "6808a9d079c6bb24421c5521": "1st Year",
+    "6808a9d279c6bb24421c5524": "2nd Year",
+    "6808a9d379c6bb24421c5527": "3rd Year",
+    "6808a9d379c6bb24421c552a": "4th Year",
+  };
+
+  // Group subjects by year._id
+  const groupedSubjects = subject.reduce((groups, subj) => {
+    const yearId = subj.year?._id || "unknown";
+    if (!groups[yearId]) {
+      groups[yearId] = [];
+    }
+    groups[yearId].push(subj);
+    return groups;
+  }, {});
+
+  // Filter subjects based on search text (case-insensitive match on subject_name or subject_codename)
+  const filteredSubjects = subject.filter((subj) => {
+    const searchLower = searchText.toLowerCase();
+    return (
+      subj.subject_name.toLowerCase().includes(searchLower) ||
+      subj.subject_codename.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Debug logs to verify grouping and mapping
+  console.log("Subjects data:", subject);
+  console.log("Grouped Subjects keys:", Object.keys(groupedSubjects));
+  console.log("Grouped Subjects:", groupedSubjects);
+  console.log("Year Map:", yearMap);
 
   return (
     <>
@@ -221,36 +269,71 @@ export default function Subjects() {
         </Box>
       </Paper>
 
-      {/* Subject List Section */}
-      <Paper elevation={6} sx={{ mt: 4, p: 4, borderRadius: 3, backgroundColor: "#ffffff" }}>
-        <Typography variant="h3" sx={{ textAlign: "center", fontWeight: 700, color: "#1976d2", marginBottom: "20px" }}>
-          Subjects
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField select fullWidth label="Student Class" value={params.student_class || ""} variant="outlined" onChange={handleSemester} sx={{ mb: 2 }}>
-              <MenuItem value="">All Semesters Subjects</MenuItem>
-              {semesters.map((x) => (<MenuItem key={x._id} value={x._id}>{x.semester_text} ({x.semester_num})</MenuItem>))}
-            </TextField>
-          </Grid>
+  {/* Student Class Filter */}
+  <Box sx={{ mt: 4, mb: 2 }}>
+    <TextField select fullWidth label="Student Class" value={params.student_class || ""} variant="outlined" onChange={handleSemester} sx={{ mb: 2 }}>
+      <MenuItem value="">All Semesters Subjects</MenuItem>
+      {semesters.map((x) => (<MenuItem key={x._id} value={x._id}>{x.semester_text} ({x.semester_num})</MenuItem>))}
+    </TextField>
+  </Box>
+
+  {/* Search Input */}
+  <Box sx={{ mb: 2 }}>
+    <TextField
+      fullWidth
+      label="Search Subjects"
+      variant="outlined"
+      value={searchText}
+      onChange={handleSearchChange}
+      placeholder="Search by subject name or code"
+    />
+  </Box>
+
+  {/* Subject List Section */}
+  <Paper elevation={6} sx={{ mt: 2, p: 4, borderRadius: 3, backgroundColor: "#ffffff" }}>
+    <Typography variant="h3" sx={{ textAlign: "center", fontWeight: 700, color: "#1976d2", marginBottom: "20px" }}>
+      Subjects
+    </Typography>
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
 
           {subject.length === 0 ? (
             <Typography variant="h6" color="textSecondary" textAlign="center">No subjects found</Typography>
           ) : (
-            subject.map((x) => (
-              <Grid item xs={12} key={x._id}>
-                <Paper elevation={3} sx={{ p: 2, display: "flex", alignItems: "center", justifyContent: "space-between", borderRadius: 2, backgroundColor: "#e3f2fd" }}>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>{x.subject_name} ({x.subject_codename})</Typography>
-                  <Box>
-                    <IconButton color="primary" onClick={() => handleEdit(x)}><Edit /></IconButton>
-                    <IconButton color="error" onClick={() => handleDelete(x._id)}><Delete /></IconButton>
-                  </Box>
-                </Paper>
-              </Grid>
-            ))
+            <>
+              {semesters.map((semester) => {
+                // Filter subjects for this semester id from filteredSubjects
+                const subjectsForSemester = filteredSubjects.filter((subj) => subj.year?._id === semester._id);
+                // If a filter is applied, further filter subjectsForSemester by params.student_class
+                const finalFilteredSubjects = params.student_class ? subjectsForSemester.filter((subj) => subj.year?._id === params.student_class) : subjectsForSemester;
+
+                // Only render semester if it has subjects after filtering
+                if (finalFilteredSubjects.length === 0) return null;
+
+                return (
+                  <Grid item xs={12} key={semester._id}>
+                    <Paper elevation={4} sx={{ p: 2, mb: 3, borderRadius: 3, backgroundColor: "#e8f0fe" }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+                        {semester.semester_text} ({semester.semester_num})
+                      </Typography>
+                      {finalFilteredSubjects.map((x) => (
+                        <Paper key={x._id} elevation={3} sx={{ p: 2, mb: 1, display: "flex", alignItems: "center", justifyContent: "space-between", borderRadius: 2, backgroundColor: "#ffffff" }}>
+                          <Typography variant="body1" sx={{ fontWeight: 500 }}>{x.subject_name} ({x.subject_codename})</Typography>
+                          <Box>
+                            <IconButton color="primary" onClick={() => handleEdit(x)}><Edit /></IconButton>
+                            <IconButton color="error" onClick={() => handleDelete(x._id)}><Delete /></IconButton>
+                          </Box>
+                        </Paper>
+                      ))}
+                    </Paper>
+                  </Grid>
+                );
+              })}
+            </>
           )}
         </Grid>
-      </Paper>
-    </>
+      </Grid>
+    </Paper>
+  </>
   );
 }

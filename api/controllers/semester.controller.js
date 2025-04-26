@@ -5,8 +5,11 @@ const Schedule = require("../models/schedule.model");
 module.exports = {
   getAllSemesters: async (req, res) => {
     try {
-      const department = req.user.department;
+      // Use department from query param as fallback if req.user.department is undefined
+      const department = req.user.department || req.query.department;
+      console.log("Fetching semesters for department:", department); // Debug log
       const allSemesters = await Semester.find({ department: department });
+      console.log("Semesters found:", allSemesters.length); // Debug log
       res.status(200).json({
         success: true,
         message: "success in fetching all semester",

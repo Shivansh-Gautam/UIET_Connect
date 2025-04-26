@@ -24,12 +24,11 @@ module.exports = {
           let originalFilename = photo.originalFilename.replace(" ", "_");
           let newPath = path.join(
             __dirname,
-            process.env.STUDENT_IMAGE_PATH,
+            "uploads/student_images",
             originalFilename
           );
 
           let photoData = fs.readFileSync(filepath);
-          fs.writeFileSync(newPath, photoData);
 
           const salt = bcrypt.genSaltSync(10);
           const hashPassword = bcrypt.hashSync(fields.password[0], salt);
@@ -65,44 +64,74 @@ module.exports = {
   //login for Student
   loginStudent: async (req, res) => {
     try {
+      console.log('Login attempt for email:', req.body.email); // Debug log
       const student = await Student.findOne({ email: req.body.email });
-      if (student) {
-        const isAuth = bcrypt.compareSync(req.body.password, student.password);
-        if (isAuth) {
-          const jwtSecret = process.env.JWT_SECRET;
-          const token = jwt.sign(
-            {
-              id: student._id,
-              department: student.department,
-              name: student.student_name,
-              image_url: student.student_image,
-              role: "STUDENT",
-            },
-            jwtSecret
-          );
-
-          res.header("Authorization", token);
-          res.status(200).json({
-            success: true,
-            message: "successfully login",
-            user: {
-              id: student._id,
-              department: student.department,
-              student_name: student.student_name,
-              image_url: student.student_image,
-              role: "STUDENT",
-            },
-          });
-        } else {
-          res.status(401).json({ success: false, message: "invalid password" });
-        }
-      } else {
-        res.status(401).json({ success: false, message: "Student not found" });
+      
+      if (!student) {
+        console.log('Student not found for email:', req.body.email);
+        return res.status(401).json({ 
+          success: false, 
+          message: "Invalid credentials",
+          details: {
+            suggestion: "Please check your email or register if new",
+            code: "EMAIL_NOT_FOUND"
+          }
+        });
       }
+
+      console.log('Found student:', student.email);
+      const isAuth = bcrypt.compareSync(req.body.password, student.password);
+      
+      if (!isAuth) {
+        console.log('Password mismatch for student:', student.email);
+        return res.status(401).json({ 
+          success: false, 
+          message: "Invalid credentials",
+          details: {
+            suggestion: "Please check your password or reset it if forgotten",
+            code: "INVALID_PASSWORD"
+          }
+        });
+      }
+
+      if (!process.env.JWT_SECRET) {
+        console.error('JWT_SECRET is not set in environment variables');
+        return res.status(500).json({ 
+          success: false, 
+          message: "Server configuration error" 
+        });
+      }
+
+      const token = jwt.sign(
+        {
+          id: student._id,
+          department: student.department,
+          name: student.name, // Changed from student_name to name
+          image_url: student.student_image,
+          role: "STUDENT",
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+
+      console.log('Generated token for student:', student.email); // Debug log
+      res.header("Authorization", token);
+      return res.status(200).json({
+        success: true,
+        message: "Login successful",
+        user: {
+          id: student._id,
+          department: student.department,
+          name: student.name, // Changed from student_name to name
+          image_url: student.student_image,
+          role: "STUDENT",
+        },
+      });
     } catch (error) {
+      console.error('Login error:', error);
       res.status(500).json({
         success: false,
-        message: "internal server error:[Student login].",
+        message: "Internal server error",
       });
     }
   },
@@ -144,7 +173,7 @@ module.exports = {
       const student = await Student.findOne({
         _id: id,
         department: department,
-      }).select(["-password"]);
+      }).populate("student_class", "semester_text").select(["-password"]);
       if (student) {
         res.status(200).json({ success: true, student });
       } else {
@@ -181,6 +210,12 @@ module.exports = {
   updateStudent: async (req, res) => {
     try {
       const id = req.params.id;
+
+      // Authorization check: if user is STUDENT, allow update only on their own profile
+      if (req.user.role === "STUDENT" && req.user.id !== id) {
+        return res.status(403).json({ success: false, message: "Access Denied" });
+      }
+
       const form = new formidable.IncomingForm();
 
       form.parse(req, async (err, fields, files) => {
@@ -210,6 +245,12 @@ module.exports = {
           fs.writeFileSync(newPath, photoData);
 
           student.student_image = originalFilename;
+        }
+
+        if (fields.password) {
+          const salt = bcrypt.genSaltSync(10);
+          const hashPassword = bcrypt.hashSync(fields.password[0], salt);
+          student.password = hashPassword;
         }
 
         Object.keys(fields).forEach((field) => {
@@ -250,6 +291,28 @@ module.exports = {
       res
         .status(500)
         .json({ success: false, message: "Error deleting Student" });
+    }
+  },
+
+  // Get total students count for a semester and department
+  getTotalStudentsCount: async (req, res) => {
+    try {
+      const department = req.user.department;
+      const { semesterId } = req.query;
+
+      if (!semesterId) {
+        return res.status(400).json({ message: "semesterId parameter is required" });
+      }
+
+      const count = await Student.countDocuments({
+        department: department,
+        student_class: semesterId,
+      });
+
+      res.status(200).json({ count });
+    } catch (error) {
+      console.error("Error fetching total students count:", error);
+      res.status(500).json({ message: "Server error" });
     }
   },
 };

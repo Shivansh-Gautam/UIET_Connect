@@ -196,7 +196,6 @@ export default function Department() {
       </AppBar>
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
-          <h1>Admin Dashboard</h1>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === "rtl" ? (
               <ChevronRightIcon />

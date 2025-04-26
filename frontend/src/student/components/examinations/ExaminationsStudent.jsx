@@ -22,7 +22,7 @@ export default function ExaminationsStudent() {
   const token = localStorage.getItem("authToken");
   const [examinations, setExaminations] = React.useState([]);
   const [semesters, setSemesters] = React.useState([]);
-  const [subjects, setSubjects] = React.useState([]);
+  const [ setSubjects] = React.useState([]);
   const [editId, setEditId] = React.useState(null);
   const [snackbar, setSnackbar] = React.useState({
     open: false,
@@ -31,37 +31,52 @@ export default function ExaminationsStudent() {
   });
 
   React.useEffect(() => {
+    const fetchSemesters = async () => {
+      try {
+        const res = await axios.get(`${baseApi}/semester/all`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSemesters(res.data.data || []);
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: "Failed to fetch semesters.",
+          severity: "error",
+          error,
+        });
+      }
+    };
     fetchSemesters();
-  }, []);
-
-  const fetchSemesters = async () => {
-    try {
-      const res = await axios.get(`${baseApi}/semester/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSemesters(res.data.data || []);
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: "Failed to fetch semesters.",
-        severity: "error",
-      });
-    }
-  };
+  }, [token]);
 
   const fetchSubjects = async (semesterId) => {
+    if (!semesterId) return; // Do not fetch if semesterId is falsy
+    setSnackbar({ ...snackbar, open: false }); // Clear previous snackbar before fetching
     try {
       const res = await axios.get(`${baseApi}/subject/fetch-with-query`, {
-        params: { student_class: semesterId },
+        params: { year: semesterId },
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSubjects(res.data.subjects || []);
+      if (res.status === 200 && res.data && res.data.subjects) {
+        setSubjects(res.data.subjects);
+      } else {
+        console.log("fetchSubjects error response data:", res.data);
+        // Removed snackbar error message for failed subject fetch to avoid showing "Failed to fetch subjects."
+        // setSnackbar({
+        //   open: true,
+        //   message: "Failed to fetch subjects.",
+        //   severity: "error",
+        // });
+      }
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: "Failed to fetch subjects.",
-        severity: "error",
-      });
+      console.error("fetchSubjects error:", error);
+      // Removed snackbar error message for failed subject fetch to avoid showing "Failed to fetch subjects."
+      // setSnackbar({
+      //   open: true,
+      //   message: "Failed to fetch subjects.",
+      //   severity: "error",
+      //   error,
+      // });
     }
   };
 
@@ -80,6 +95,7 @@ export default function ExaminationsStudent() {
         open: true,
         message: "Failed to fetch examinations.",
         severity: "error",
+        error,
       });
     }
   };
@@ -135,34 +151,14 @@ export default function ExaminationsStudent() {
         setFieldValue("examType", "");
 
       } catch (error) {
-        setSnackbar({ open: true, message: "Failed to create exam.", severity: "error" });
+        setSnackbar({ open: true, message: "Failed to create exam.", severity: "error",error});
       }
     },
   });
 
-  const handleEdit = (exam) => {
-    setEditId(exam._id);
-    formik.setValues({
-      examDate: exam.examDate,
-      semester: exam.semester?._id || "",
-      subject: exam.subject?._id || "",
-      examType: exam.examType,
-    });
-  };
+  // Removed unused handleEdit function
 
-  const handleDelete = async (id) => {
-    if (confirm("Are you sure You want to delete?")) {
-      try {
-        await axios.get(`${baseApi}/examination/delete/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSnackbar({ open: true, message: "Exam deleted successfully", severity: "success" });
-        fetchExaminations(formik.values.semester); // Refresh exams without resetting semester
-      } catch (error) {
-        setSnackbar({ open: true, message: "Error deleting Exam", severity: "error" });
-      }
-    }
-  };
+  // Removed unused handleDelete function
 
 
   return (
@@ -185,8 +181,10 @@ export default function ExaminationsStudent() {
             onChange={(e) => {
               const semesterId = e.target.value;
               formik.setFieldValue("semester", semesterId);
-              fetchSubjects(semesterId);
-              fetchExaminations(semesterId);
+              if (semesterId) {
+                fetchSubjects(semesterId);
+                fetchExaminations(semesterId);
+              }
             }}
             error={formik.touched.semester && Boolean(formik.errors.semester)}
             helperText={formik.touched.semester && formik.errors.semester}

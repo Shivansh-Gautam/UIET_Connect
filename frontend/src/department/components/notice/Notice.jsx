@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Typography, IconButton, MenuItem } from "@mui/material";
+import { Box, Button, TextField, Typography, IconButton, MenuItem, Card, CardHeader, CardContent, Divider } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import { useFormik } from "formik";
 import { noticeSchema } from "../../../yupSchema/noticeSchema";
@@ -13,6 +13,7 @@ export default function Notice() {
   const [notices, setNotices] = useState([]);
   const [editId, setEditId] = useState(null);
   const [alert, setAlert] = useState({ open: false, message: "", severity: "success" });
+  const [years, setYears] = useState([]);
 
   const handleAlertClose = () => {
     setAlert({ ...alert, open: false });
@@ -29,22 +30,44 @@ export default function Notice() {
     }
   };
 
+  const fetchYears = async () => {
+    try {
+      const response = await axios.get(`${baseApi}/semester/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Fetch years response:", response);
+      if (response.data && response.data.data) {
+        setYears(response.data.data);
+      } else {
+        console.error("Unexpected response structure for years:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching years:", error);
+    }
+  };
+
   useEffect(() => {
     fetchNotices();
+    fetchYears();
   }, []);
 
   const formik = useFormik({
-    initialValues: { title: "", message: "", audience:"" },
+    initialValues: { title: "", message: "", audience:"", year: "" },
     validationSchema: noticeSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
+        // Sanitize year field: convert empty string to null
+        const sanitizedValues = { ...values };
+        if (sanitizedValues.year === "") {
+          sanitizedValues.year = null;
+        }
         if (editId) {
-          await axios.patch(`${baseApi}/notice/update/${editId}`, values, {
+          await axios.patch(`${baseApi}/notice/update/${editId}`, sanitizedValues, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setAlert({ open: true, message: "Notice updated successfully", severity: "success" });
         } else {
-          await axios.post(`${baseApi}/notice/create`, values, {
+          await axios.post(`${baseApi}/notice/create`, sanitizedValues, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setAlert({ open: true, message: "Notice added successfully", severity: "success" });
@@ -61,7 +84,8 @@ export default function Notice() {
 
   const handleEdit = (notice) => {
     setEditId(notice._id);
-    formik.setValues({ title: notice.title, message: notice.message, audience: notice.audience });
+    formik.setValues({ title: notice.title, message: notice.message, audience: notice.audience, year: notice.year || "" });
+    window.scrollTo(0, 0);
   };
 
   const handleDelete = async (id) => {
@@ -115,34 +139,85 @@ export default function Notice() {
             helperText={formik.touched.audience && formik.errors.audience}
             sx={{ mb: 2 }}
           >
-            <MenuItem value="">Select Subject</MenuItem>
+            <MenuItem value="">Select Audience</MenuItem>
             <MenuItem value="teacher">Teacher</MenuItem>
             <MenuItem value="student">Student</MenuItem>
-            
           </TextField>
+
+          {formik.values.audience === "student" && (
+            <TextField
+              select
+              fullWidth
+              label="Year"
+              name="year"
+              value={formik.values.year}
+              onChange={formik.handleChange}
+              error={formik.touched.year && Boolean(formik.errors.year)}
+              helperText={formik.touched.year && formik.errors.year}
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="">Select Year</MenuItem>
+              {years.map((year) => (
+                <MenuItem key={year._id} value={year._id}>
+                  {`${year.semester_text} (${year.semester_num})`}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+
         <Button fullWidth variant="contained" color="primary" type="submit">
           {editId ? "Update" : "Submit"}
         </Button>
       </Box>
 
-      <Box component="div" sx={{ display: "flex", flexDirection: "row", gap: 2, mt: 4 }}>
+      <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 4 }}>
         {notices.length === 0 ? (
-          <Typography variant="h6">No notice found</Typography>
-        ) : (notices.map((sem) => (
-          <Box key={sem._id} sx={{ display: "flex",flexDirection:"column",  justifyContent: "space-between", p: 2, border: "1px solid #ddd", borderRadius: 2 }}>
-            <Typography><b>Title:</b> {sem.title} </Typography>
-            <Typography><b>Message:</b> {sem.message} </Typography>
-            <Typography><b>Audience:</b> {sem.audience} </Typography>
-            <Box>
-              <IconButton color="primary" onClick={() => handleEdit(sem)}>
-                <Edit />
-              </IconButton>
-              <IconButton color="error" onClick={() => handleDelete(sem._id)}>
-                <Delete />
-              </IconButton>
-            </Box>
-          </Box>
-        )))}
+          <Typography variant="h6" align="center">No notice found</Typography>
+        ) : (
+          notices.map((notice) => (
+            <Card
+              key={notice._id}
+              variant="outlined"
+              sx={{
+                boxShadow: 3,
+                borderRadius: 3,
+                transition: "box-shadow 0.3s ease",
+                "&:hover": { boxShadow: 6 },
+                position: "relative",
+              }}
+            >
+              <CardHeader
+                title={<Typography variant="h6" sx={{ fontWeight: "bold" }}>{notice.title}</Typography>}
+                subheader={
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography variant="body2" color="text.secondary">Audience: {notice.audience}</Typography>
+                    {notice.createdAt && (
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(notice.createdAt).toLocaleDateString()}
+                      </Typography>
+                    )}
+                  </Box>
+                }
+                action={
+                  <Box>
+                    <IconButton color="primary" onClick={() => handleEdit(notice)}>
+                      <Edit />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDelete(notice._id)}>
+                      <Delete />
+                    </IconButton>
+                  </Box>
+                }
+              />
+              <Divider />
+              <CardContent>
+                <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
+                  {notice.message}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </Box>
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -6,7 +6,6 @@ import {
   TextField,
   Button,
   Typography,
-  Paper,
   Avatar,
   Box,
   InputAdornment,
@@ -15,7 +14,6 @@ import {
   CardMedia,
   CardContent,
   Card,
-  Grid,
   CardActions,
 } from "@mui/material";
 import { Visibility, VisibilityOff, CloudUpload } from "@mui/icons-material";
@@ -29,38 +27,41 @@ import { teacherEditSchema } from "../../../yupSchema/teacherSchema";
 const Teachers = () => {
   const token = localStorage.getItem("authToken");
   const [edit, setEdit] = useState(false);
-  const [editId, setEditId] = useState(null);  const [image, setImage] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [image, setImage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [semesters, setSemesters] = useState([]);
+  // Removed unused semesters state to fix ESLint warning
+  // const [semesters, setSemesters] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
 
-  const fetchSemesters = async () => {
-    if (!token) {
-      setSnackbar({
-        open: true,
-        message: "Authorization token missing",
-        severity: "error",
-      });
-      return;
-    }
-    try {
-      const response = await axios.get(`${baseApi}/semester/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSemesters(response.data.data);
-    } catch (error) {
-      console.error("Error fetching semesters:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to fetch semesters",
-        severity: "error",
-      });
-    }
-  };
+  // Commented out fetchSemesters function since it is unused
+  // const fetchSemesters = useCallback(async () => {
+  //   if (!token) {
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Authorization token missing",
+  //       severity: "error",
+  //     });
+  //     return;
+  //   }
+  //   try {
+  //     const response = await axios.get(`${baseApi}/semester/all`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //     setSemesters(response.data.data);
+  //   } catch (error) {
+  //     console.error("Error fetching semesters:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Failed to fetch semesters",
+  //       severity: "error",
+  //     });
+  //   }
+  // });
 
   const [params, setParams] = useState({});
 
@@ -99,7 +100,7 @@ const Teachers = () => {
       setSnackbar({ open: true, message: "Teacher deleted successfully!", severity: "success" });
       fetchTeachers();
     } catch (error) {
-      setSnackbar({ open: true, message: "Failed to delete teacher", severity: "error" });
+      setSnackbar({ open: true, message: "Failed to delete teacher", severity: "error", error });
     }
   };
 
@@ -134,11 +135,19 @@ const Teachers = () => {
       });
     }
   };
-  useEffect(() => {
-    fetchSemesters();
-  }, []);
+  // Removed useEffect for fetchSemesters since function is removed
+  // useEffect(() => {
+  //   fetchSemesters();
+  // }, [fetchSemesters]);
   useEffect(() => {
     fetchTeachers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Add useEffect to refetch teachers when params change (e.g., search)
+  useEffect(() => {
+    fetchTeachers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
   useEffect(() => {

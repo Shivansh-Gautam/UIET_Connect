@@ -5,8 +5,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import {TextField, MenuItem } from "@mui/material";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { baseApi } from "../../../environment";
-
+import { baseApi } from "../../../environment.js";
 export default function ScheduleStudent() {
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
@@ -77,14 +76,12 @@ export default function ScheduleStudent() {
         onChange={(e) => setSelectedSemester(e.target.value)}
       >
         <MenuItem value="">Select Semester</MenuItem>
-        {semesters.map((x) => (
+        {semesters.filter(x => x).map((x) => (
           <MenuItem key={x._id} value={x._id}>
             {x.semester_text} ({x.semester_num})
           </MenuItem>
         ))}
       </TextField>
-
-      
 
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

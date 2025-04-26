@@ -26,7 +26,7 @@ module.exports = {
         department: req.user.department,
         subject_name: req.body.subject_name,
         subject_codename: req.body.subject_codename,
-        student_class: req.body.student_class,
+        year: req.body.year,
       });
 
       await newSubject.save();
@@ -34,6 +34,7 @@ module.exports = {
         .status(200)
         .json({ success: true, message: "successfully created Subject" });
     } catch (err) {
+      console.error("Error creating Subject:", err);
       res
         .status(500)
         .json({ success: false, message: "Server error in creating Subject" });
@@ -91,20 +92,23 @@ module.exports = {
     try {
       const filterQuery = {};
       const department = req.user.department;
+      console.log("getSubjectsWithQuery called with query:", req.query); // Debug log
       filterQuery["department"] = department;
 
-      if (req.query.hasOwnProperty("student_class")) {
-        filterQuery["student_class"] = req.query.student_class;
+      if (req.query.hasOwnProperty("year")) {
+        filterQuery["year"] = req.query.year;
       }
 
       const subjects =
-        await Subject.find(filterQuery).populate("student_class");
+        await Subject.find(filterQuery).populate("year").populate("teacher");
+      console.log("Subjects found:", subjects.length); // Debug log
       res.status(200).json({
         success: true,
         message: "success in fetching all Students",
         subjects,
       });
     } catch (error) {
+      console.error("getSubjectsWithQuery error:", error); // Debug log
       res.status(500).json({
         success: false,
         message: "internal server error:[all Student]",

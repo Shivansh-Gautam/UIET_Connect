@@ -1,4 +1,5 @@
 import "./App.css";
+import { lazy, Suspense } from "react";
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AttendanceStudentsList from "./department/components/attendance/AttendanceStudentsList";
@@ -35,6 +36,11 @@ import NotesTeacher from "./teacher/components/notes/NotesTeacher";
 import Department from "./department/Department";
 import StudentProfile from "./student/components/student details/StudentProfile";
 import IdGenerator from "./student/components/student details/IdGenerator";
+import AssignmentStudent from "./student/components/assignment/AssignmentStudent";
+import AssignmentTeacher from "./teacher/components/assignment/AssignmentTeacher";
+const LazyTeacherNotes = lazy(() =>
+  import("./teacher/components/notes/NotesTeacher")
+);
 
 function App() {
   return (
@@ -77,6 +83,8 @@ function App() {
             <Route path="notice" element={<NoticeStudent />} />
             <Route path="schedule" element={<ScheduleStudent />} />
             <Route path="profile" element={<StudentProfile />} />
+
+            <Route path="assignment" element={<AssignmentStudent />} />
             <Route path="student-Id" element={<IdGenerator />} />
           </Route>
           {/* teacher */}
@@ -90,10 +98,18 @@ function App() {
           >
             <Route index element={<TeacherDetails />} />
             <Route path="attendance" element={<AttendanceTeacher />} />
-            <Route path="notes" element={<NotesTeacher />} />
             <Route path="examinations" element={<ExaminationsTeacher />} />
             <Route path="notice" element={<NoticeTeacher />} />
             <Route path="schedule" element={<ScheduleTeacher />} />
+            <Route path="assignment" element={<AssignmentTeacher />} />
+            <Route
+              path="notes"
+              element={
+                <Suspense fallback={<div>Loading...</div>}>
+                  <LazyTeacherNotes />
+                </Suspense>
+              }
+            />
           </Route>
           {/* client */}
 

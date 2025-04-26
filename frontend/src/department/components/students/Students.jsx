@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -6,7 +6,6 @@ import {
   TextField,
   Button,
   Typography,
-  Paper,
   Avatar,
   Box,
   InputAdornment,
@@ -15,7 +14,6 @@ import {
   CardMedia,
   CardContent,
   Card,
-  Grid,
   CardActions,
 } from "@mui/material";
 import { Visibility, VisibilityOff, CloudUpload } from "@mui/icons-material";
@@ -40,8 +38,6 @@ const Students = () => {
     message: "",
     severity: "success",
   });
-  const [students, setStudents] = useState([]);
-  const [params, setParams] = useState({});
 
   const fetchSemesters = async () => {
     if (!token) {
@@ -56,7 +52,9 @@ const Students = () => {
       const response = await axios.get(`${baseApi}/semester/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSemesters(response.data.data);
+      // Filter out null or undefined semesters to avoid errors
+      const filteredSemesters = response.data.data.filter((s) => s != null);
+      setSemesters(filteredSemesters);
     } catch (error) {
       console.error("Error fetching semesters:", error);
       setSnackbar({
@@ -67,7 +65,31 @@ const Students = () => {
     }
   };
 
+  const [params, setParams] = useState({});
+
+  const handleSemester = (e) => {
+    setParams((prevParams) => ({
+      ...prevParams,
+      student_class: e.target.value || undefined,
+    }));
+    formik.setFieldValue("student_class", e.target.value || "");
+    console.log(
+      "handleSemester called, updated params and formik student_class:",
+      e.target.value
+    );
+  };
+
+  const handleSearch = (e) => {
+    setParams((prevParams) => ({
+      ...prevParams,
+      search: e.target.value || undefined,
+    }));
+  };
+
+  const [students, setStudents] = useState([]);
+
   const fetchStudents = async () => {
+    console.log("Fetching students with params:", params);
     if (!token) {
       setSnackbar({
         open: true,
@@ -92,6 +114,72 @@ const Students = () => {
     }
   };
 
+  const handleEdit = (id) => {
+    console.log("handleEdit called with id:", id);
+    setEdit(true);
+    setEditId(id);
+    const student = students.find((x) => x._id === id);
+    if (student) {
+      const studentClassId =
+        typeof student.student_class === "string"
+          ? student.student_class
+          : student.student_class?._id || "";
+      formik.setValues({
+        name: student.name || "",
+        email: student.email || "",
+        student_class: studentClassId,
+        gender: student.gender || "",
+        age: student.age || "",
+        student_contact: student.student_contact || "",
+        guardian: student.guardian || "",
+        guardian_phone: student.guardian_phone || "",
+        password: "",
+        confirm_password: "",
+      });
+      console.log("Form values set for editing:", formik.values);
+    }
+  };
+
+  const handleDelete = async (studentId) => {
+    console.log("handleDelete called with id:", studentId);
+    if (!token) {
+      setSnackbar({
+        open: true,
+        message: "Authorization token missing",
+        severity: "error",
+      });
+      return;
+    }
+    try {
+      const response = await axios.delete(
+        `${baseApi}/student/delete/${studentId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Delete response:", response);
+      setSnackbar({
+        open: true,
+        message: "Student deleted successfully!",
+        severity: "success",
+      });
+      fetchStudents();
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || "Failed to delete student",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    formik.resetForm();
+    setEdit(false);
+    setEditId(null);
+  };
+
   useEffect(() => {
     fetchSemesters();
   }, []);
@@ -107,80 +195,6 @@ const Students = () => {
       }
     };
   }, [image]);
-
-  const handleSemester = (e) => {
-    setParams((prev) => ({
-      ...prev,
-      student_class: e.target.value || undefined,
-    }));
-  };
-
-  const handleSearch = (e) => {
-    setParams((prev) => ({
-      ...prev,
-      search: e.target.value || undefined,
-    }));
-  };
-
-  const handleEdit = (id) => {
-    setEdit(true);
-    setEditId(id);
-    const student = students.find((x) => x._id === id);
-    formik.setValues({
-      name: student.name,
-      email: student.email,
-      student_class: student.student_class._id,
-      gender: student.gender,
-      age: student.age,
-      student_contact: student.student_contact,
-      guardian: student.guardian,
-      guardian_phone: student.guardian_phone,
-      password: "",
-      confirm_password: "",
-    });
-  };
-
-  const handleDelete = async (id) => {
-    if (!token) {
-      setSnackbar({
-        open: true,
-        message: "Authorization token missing",
-        severity: "error",
-      });
-      return;
-    }
-    try {
-      await axios.delete(`${baseApi}/student/delete/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSnackbar({
-        open: true,
-        message: "Student deleted successfully!",
-        severity: "success",
-      });
-      fetchStudents();
-    } catch (error) {
-      console.error("Delete error:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to delete student",
-        severity: "error",
-      });
-    }
-  };
-
-  const handleCancel = () => {
-    formik.resetForm();
-    setEdit(false);
-    setImage(null);
-  };
-
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setImage(file);
-    }
-  };
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -201,7 +215,9 @@ const Students = () => {
     },
     validationSchema: edit ? studentEditSchema : studentSchema,
     onSubmit: async (values) => {
+      console.log("Submitting form with values:", values);
       if (!edit && !image) {
+        // Only check for image on new registration
         setSnackbar({
           open: true,
           message: "Please upload an image before registering.",
@@ -219,8 +235,12 @@ const Students = () => {
       }
 
       const fd = new FormData();
-      if (image) fd.append("image", image, image.name);
+      if (image) fd.append("image", image, image.name); // Only append image if present
       Object.keys(values).forEach((key) => fd.append(key, values[key]));
+      console.log("FormData entries:");
+      for (let pair of fd.entries()) {
+        console.log(pair[0] + ": " + pair[1]);
+      }
 
       try {
         if (edit) {
@@ -238,41 +258,57 @@ const Students = () => {
           });
           setSnackbar({
             open: true,
-            message: "Registered successfully!",
+            message: "Registered Successfully!",
             severity: "success",
           });
         }
         formik.resetForm();
         setEdit(false);
+        setEditId(null);
         setImage(null);
         fetchStudents();
-      } catch (error) {
-        console.error("Submit error:", error);
+      } catch (e) {
         setSnackbar({
           open: true,
-          message: error.response?.data?.message || "Operation failed",
+          message: e.response?.data?.message || "Operation failed.",
           severity: "error",
         });
       }
     },
   });
 
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImage(file);
+    }
+  };
+
   return (
     <>
-      {/* Form Section */}
       <Container
         maxWidth="sm"
         sx={{ mt: 8, mb: 8, p: 4, borderRadius: 4, boxShadow: 9 }}
       >
-        <Typography
-          variant="h4"
-          component="h1"
-          gutterBottom
-          sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
-        >
-          {edit ? "Edit Student" : "Add New Student"}
-        </Typography>
-
+        {edit ? (
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
+          >
+            Edit Student
+          </Typography>
+        ) : (
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
+          >
+            Add New Student
+          </Typography>
+        )}
         <Box
           component="form"
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
@@ -303,15 +339,13 @@ const Students = () => {
               />
             )}
           </Box>
-
-          {/* Fields */}
           <TextField
             fullWidth
             label="Name"
             variant="outlined"
             {...formik.getFieldProps("name")}
             error={formik.touched.name && Boolean(formik.errors.name)}
-            helperText={formik.touched.name && formik.errors.name}
+            helperText={formik.touched.name && formik.errors?.name}
           />
           <TextField
             fullWidth
@@ -319,30 +353,32 @@ const Students = () => {
             variant="outlined"
             {...formik.getFieldProps("email")}
             error={formik.touched.email && Boolean(formik.errors.email)}
-            helperText={formik.touched.email && formik.errors.email}
+            helperText={formik.touched.email && formik.errors?.email}
           />
-
           <TextField
             select
             fullWidth
             label="Student Class"
             variant="outlined"
             {...formik.getFieldProps("student_class")}
+            onChange={(e) => {
+              formik.handleChange(e);
+              handleSemester(e);
+            }}
             error={
               formik.touched.student_class &&
               Boolean(formik.errors.student_class)
             }
             helperText={
-              formik.touched.student_class && formik.errors.student_class
+              formik.touched.student_class && formik.errors?.student_class
             }
           >
-            {semesters.map((sem) => (
-              <MenuItem key={sem._id} value={sem._id}>
-                {sem.semester_text} ({sem.semester_num})
+            {semesters.map((x) => (
+              <MenuItem key={x._id} value={x._id}>
+                {x?.semester_text ?? "N/A"} ({x?.semester_num ?? "N/A"})
               </MenuItem>
             ))}
           </TextField>
-
           <TextField
             select
             fullWidth
@@ -350,7 +386,7 @@ const Students = () => {
             variant="outlined"
             {...formik.getFieldProps("gender")}
             error={formik.touched.gender && Boolean(formik.errors.gender)}
-            helperText={formik.touched.gender && formik.errors.gender}
+            helperText={formik.touched.gender && formik.errors?.gender}
           >
             {["Male", "Female", "Other"].map((gender) => (
               <MenuItem key={gender} value={gender}>
@@ -365,7 +401,7 @@ const Students = () => {
             variant="outlined"
             {...formik.getFieldProps("age")}
             error={formik.touched.age && Boolean(formik.errors.age)}
-            helperText={formik.touched.age && formik.errors.age}
+            helperText={formik.touched.age && formik.errors?.age}
           />
           <TextField
             fullWidth
@@ -377,17 +413,19 @@ const Students = () => {
               Boolean(formik.errors.student_contact)
             }
             helperText={
-              formik.touched.student_contact && formik.errors.student_contact
+              formik.touched.student_contact && formik.errors?.student_contact
             }
           />
+
           <TextField
             fullWidth
             label="Guardian"
             variant="outlined"
             {...formik.getFieldProps("guardian")}
             error={formik.touched.guardian && Boolean(formik.errors.guardian)}
-            helperText={formik.touched.guardian && formik.errors.guardian}
+            helperText={formik.touched.guardian && formik.errors?.guardian}
           />
+
           <TextField
             fullWidth
             label="Guardian Phone"
@@ -398,7 +436,7 @@ const Students = () => {
               Boolean(formik.errors.guardian_phone)
             }
             helperText={
-              formik.touched.guardian_phone && formik.errors.guardian_phone
+              formik.touched.guardian_phone && formik.errors?.guardian_phone
             }
           />
 
@@ -409,7 +447,7 @@ const Students = () => {
             variant="outlined"
             {...formik.getFieldProps("password")}
             error={formik.touched.password && Boolean(formik.errors.password)}
-            helperText={formik.touched.password && formik.errors.password}
+            helperText={formik.touched.password && formik.errors?.password}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -431,23 +469,32 @@ const Students = () => {
               Boolean(formik.errors.confirm_password)
             }
             helperText={
-              formik.touched.confirm_password && formik.errors.confirm_password
+              formik.touched.confirm_password && formik.errors?.confirm_password
             }
           />
-
-          {/* Buttons */}
           <Box sx={{ textAlign: "center" }}>
-            <Button
-              sx={{ width: "120px", m: 1 }}
-              variant="contained"
-              color="primary"
-              type="submit"
-            >
-              {edit ? "Update" : "Register"}
-            </Button>
+            {edit ? (
+              <Button
+                sx={{ width: "120px", margin: "5px" }}
+                variant="contained"
+                color="primary"
+                type="submit"
+              >
+                Update
+              </Button>
+            ) : (
+              <Button
+                sx={{ width: "120px", margin: "5px" }}
+                variant="contained"
+                color="primary"
+                type="submit"
+              >
+                Register
+              </Button>
+            )}
             {edit && (
               <Button
-                sx={{ width: "120px", m: 1, background: "red" }}
+                sx={{ width: "120px", margin: "5px", background: "red" }}
                 variant="contained"
                 type="button"
                 onClick={handleCancel}
@@ -457,7 +504,6 @@ const Students = () => {
             )}
           </Box>
         </Box>
-
         <SnackbarAlert
           open={snackbar.open}
           message={snackbar.message}
@@ -466,81 +512,129 @@ const Students = () => {
         />
       </Container>
 
-      {/* Search and Filters */}
       <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          gap: "10px",
-          mx: 4,
-          mb: 4,
-        }}
+        component={"div"}
+        sx={{ display: "flex", flexDirection: "row", gap: "10px" }}
       >
         <TextField
           select
-          label="Filter by Semester"
+          fullWidth
+          label="Student Class"
+          value={params.student_class ? params.student_class : ""}
           variant="outlined"
-          value={params.student_class || ""}
           onChange={handleSemester}
-          sx={{ flex: 1 }}
         >
-          <MenuItem value="">All Semesters</MenuItem>
-          {semesters.map((sem) => (
-            <MenuItem key={sem._id} value={sem._id}>
-              {sem.semester_text} ({sem.semester_num})
+          <MenuItem value="">Select Semester</MenuItem>
+          {semesters.map((x) => (
+            <MenuItem key={x._id} value={x._id}>
+              {x?.semester_text ?? "N/A"} ({x?.semester_num ?? "N/A"})
             </MenuItem>
           ))}
         </TextField>
         <TextField
-          label="Search by Name or Email"
+          fullWidth
+          label="Search"
           variant="outlined"
+          value={params.search ? params.search : ""}
           onChange={handleSearch}
-          sx={{ flex: 2 }}
         />
       </Box>
-
-      {/* Students List */}
-      <Grid container spacing={2} sx={{ px: 4, mb: 8 }}>
-        {students.map((student) => (
-          <Grid item key={student._id} xs={12} sm={6} md={4}>
+      <Box
+        component="div"
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+          gap: 2,
+          marginTop: "40px",
+        }}
+      >
+        {students &&
+          students.map((student) => (
             <Card
-              sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+              key={student._id}
+              sx={{
+                height: 450,
+                boxShadow: 4,
+                borderRadius: 4,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
             >
               <CardMedia
                 component="img"
-                height="200"
-                image={student?.imageUrl}
-                alt={student?.name}
+                sx={{ height: 180, objectFit: "cover" }}
+                image={`/images/uploaded/student/${student.student_image}`}
+                alt="Student Image"
               />
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {student.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {student.email}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Contact: {student.student_contact}
-                </Typography>
+              <CardContent
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  padding: 1,
+                }}
+              >
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    <strong>Name:</strong> {student.name}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Email:</strong> {student.email}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Semester:</strong>{" "}
+                    {(() => {
+                      const yearMapping = {
+                        "6808a9d379c6bb24421c5527": "Year (3)",
+                        "6808a9d279c6bb24421c5524": "Year (2)",
+                      };
+                      if (student.student_class && student.student_class._id) {
+                        return (
+                          yearMapping[student.student_class._id] ||
+                          `${student.student_class.semester_text ?? "N/A"} (${
+                            student.student_class.semester_num ?? "N/A"
+                          })`
+                        );
+                      }
+                      return "N/A";
+                    })()}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Age:</strong> {student.age}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Contact:</strong> {student.student_contact}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Gender:</strong> {student.gender}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Guardian:</strong> {student.guardian}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Guardian Phone:</strong> {student.guardian_phone}
+                  </Typography>
+                </Box>
               </CardContent>
-              <CardActions>
+              <CardActions sx={{ justifyContent: "space-between", padding: 1 }}>
                 <IconButton
                   color="primary"
                   onClick={() => handleEdit(student._id)}
                 >
-                  <EditIcon />
+                  <EditIcon fontSize="small" />
                 </IconButton>
                 <IconButton
                   color="error"
                   onClick={() => handleDelete(student._id)}
                 >
-                  <DeleteIcon />
+                  <DeleteIcon fontSize="small" />
                 </IconButton>
               </CardActions>
             </Card>
-          </Grid>
-        ))}
-      </Grid>
+          ))}
+      </Box>
     </>
   );
 };

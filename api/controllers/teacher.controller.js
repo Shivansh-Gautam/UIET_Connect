@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 const Teacher = require("../models/teacher.model");
 
@@ -34,17 +35,6 @@ module.exports = {
           const salt = bcrypt.genSaltSync(10);
           const hashPassword = bcrypt.hashSync(fields.password[0], salt);
           const newTeacher = new Teacher({
-
-            //  department: { type: mongoose.Schema.ObjectId, ref: "Department" },
-            //   email: { type: String, required: true },
-            //   name: { type: String, required: true },
-            //   qualification: { type: String, required: true },
-            //   gender: { type: String, required: true },
-            //   age: { type: Number, required: true },
-            //   department_image: { type: string, required: true },
-            //   password: { type: string, required: true },
-
-
             department: req.user.department,
             email: fields.email[0],
             name: fields.name[0],
@@ -70,61 +60,50 @@ module.exports = {
     }
   },
 
-  //login for Teacher
   loginTeacher: async (req, res) => {
     try {
-      const { email, password } = req.body;
-      const teacher = await Teacher.findOne({ email });
-  
-      if (!teacher) {
-        return res.status(401).json({ success: false, message: "Teacher not found" });
+      const teacher = await Teacher.findOne({ email: req.body.email });
+      if (teacher) {
+        const isAuth = bcrypt.compareSync(req.body.password, teacher.password);
+        if (isAuth) {
+          const jwtSecret = process.env.JWT_SECRET;
+          const token = jwt.sign(
+            {
+              id: teacher._id,
+              department: teacher.department,
+              name: teacher.name,
+              image_url: teacher.teacher_image,
+              role: "TEACHER",
+            },
+            jwtSecret
+          );
+
+          res.header("Authorization", token);
+          res.status(200).json({
+            success: true,
+            message: "successfully login",
+            user: {
+              id: teacher._id,
+              department: teacher.department,
+              teacher_name: teacher.teacher_name,
+              image_url: teacher.teacher_image,
+              role: "TEACHER",
+            },
+          });
+        } else {
+          res.status(401).json({ success: false, message: "invalid password" });
+        }
+      } else {
+        res.status(401).json({ success: false, message: "Teacher not found" });
       }
-  
-      const isAuth = bcrypt.compareSync(password, teacher.password);
-  
-      if (!isAuth) {
-        return res.status(401).json({ success: false, message: "Invalid password" });
-      }
-  
-      const jwtSecret = process.env.JWT_SECRET;
-      const token = jwt.sign(
-        {
-          id: teacher._id,
-          department: teacher.department, // use consistent naming (camelCase)
-          name: teacher.teacher_name,
-          imageUrl: teacher.teacher_image,
-          role: "TEACHER",
-        },
-        jwtSecret,
-        { expiresIn: "1d" } // Always good to expire token
-      );
-  
-      res
-        .header("Authorization", token)
-        .status(200)
-        .json({
-          success: true,
-          message: "Successfully logged in",
-          token, // send token in body also for easier frontend handling
-          user: {
-            id: teacher._id,
-            department: teacher.department,
-            name: teacher.teacher_name,
-            imageUrl: teacher.teacher_image,
-            role: "TEACHER",
-          },
-        });
-        
     } catch (error) {
-      console.error("[Teacher Login Error]:", error.message);
       res.status(500).json({
         success: false,
-        message: "Internal Server Error: [Teacher login]",
+        message: "internal server error:[Teacher login].",
       });
     }
   },
-  
-  // get all Teacher data
+
   getTeachersWithQuery: async (req, res) => {
     try {
       const filterQuery = {};
@@ -149,27 +128,48 @@ module.exports = {
     }
   },
 
-  //get Teacher own data
   getTeacherOwnData: async (req, res) => {
     try {
-      const id = req.user.id;
-      const department = req.user.department;
+      console.log("getTeacherOwnData req.user:", req.user);
+      console.log("Raw department id from token payload:", req.user.department);
+      let id, department;
+      try {
+        id = new mongoose.Types.ObjectId(req.user.id);
+        department = new mongoose.Types.ObjectId(req.user.department);
+      } catch (err) {
+        console.error("Invalid ObjectId in token payload:", err);
+        return res.status(400).json({ success: false, message: "Invalid user id or department in token" });
+      }
+      console.log("Searching teacher with id:", id, "and department:", department);
+
+      const teacherById = await Teacher.findOne({ _id: id }).populate("department").select();
+      console.log("Teacher found by id only:", teacherById);
+      if (teacherById) {
+        console.log("Department id in teacher document:", teacherById.department?._id || teacherById.department);
+      }
+
       const teacher = await Teacher.findOne({
         _id: id,
         department: department,
-      }).select(["-password"]);
+      }).populate("department").select();
+
+      console.log("Teacher found by id and department:", teacher);
+
       if (teacher) {
         res.status(200).json({ success: true, teacher });
       } else {
+        console.log("Teacher not found for given id and department");
         res.status(404).json({ success: false, message: "Teacher not found" });
       }
     } catch (error) {
+      console.error("Error in getTeacherOwnData:", error);
       res.status(500).json({
         success: false,
         message: "internal server error:[own  Teacher data]",
       });
     }
   },
+
   getTeacherWithId: async (req, res) => {
     try {
       const id = req.params.id;
@@ -223,6 +223,12 @@ module.exports = {
           fs.writeFileSync(newPath, photoData);
 
           teacher.teacher_image = originalFilename;
+        }
+
+        if (fields.password) {
+          const salt = bcrypt.genSaltSync(10);
+          const hashPassword = bcrypt.hashSync(fields.password[0], salt);
+          teacher.password = hashPassword;
         }
 
         Object.keys(fields).forEach((field) => {

@@ -24,6 +24,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 // icons
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import NoteIcon from "@mui/icons-material/Note";
 import AddCardIcon from "@mui/icons-material/AddCard";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
@@ -167,7 +168,7 @@ export default function Student() {
 
   const navArr = [
     { link: "/student", component: "Your Details", icon: DashboardIcon },
-    { link: "/student/notes", component: "Notes", icon: DocumentScannerIcon },
+    { link: "/student/notes", component: "Notes", icon: NoteIcon },
     { link: "/student/notice", component: "Notice", icon: NotificationsIcon },
     {
       link: "/student/examinations",
@@ -189,6 +190,11 @@ export default function Student() {
       link: "/student/student-id",
       component: "ID Generator",
       icon: AddCardIcon,
+    },
+    {
+      link: "/student/assignment",
+      component: "Assignment",
+      icon: DocumentScannerIcon,
     },
     { link: "/logout", component: "Log Out", icon: LogoutIcon },
   ];
