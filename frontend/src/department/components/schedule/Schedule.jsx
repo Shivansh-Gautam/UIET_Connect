@@ -1,9 +1,9 @@
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import { Button, TextField, MenuItem } from "@mui/material";
 import { useState, useEffect } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { Box, Button, TextField, MenuItem, GlobalStyles } from "@mui/material";
 import axios from "axios";
 import ScheduleEvent from "./ScheduleEvent";
 import { baseApi } from "../../../environment";
@@ -20,113 +20,162 @@ export default function Schedule() {
   }, []);
 
   useEffect(() => {
-    if (selectedSemester) {
-      fetchSchedule();
-    }
+    if (selectedSemester) fetchSchedule();
   }, [selectedSemester]);
 
   const fetchSemesters = async () => {
     try {
-      const response = await axios.get(`${baseApi}/semester/all`, {
+      const { data } = await axios.get(`${baseApi}/semester/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSemesters(response.data.data);
-      if (response.data.data.length > 0) {
-        setSelectedSemester(response.data.data[0]._id);
-      }
-    } catch (error) {
-      console.error("Error fetching semesters:", error);
+      setSemesters(data.data);
+      if (data.data.length) setSelectedSemester(data.data[0]._id);
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const fetchSchedule = async () => {
     try {
-      const response = await axios.get(`${baseApi}/schedule/fetch-with-semester/${selectedSemester}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const formattedEvents = response.data.data.map((event) => {
-        const subjectName = event.subject?.subject_name || "Unknown Subject";
-        const teacherName = event.teacher?.name || "Unknown Teacher";
-        const day = event.day; // 0 (Sunday) to 6 (Saturday)
-
-        if (day === undefined || day < 1 || day > 6) return null; // Only Monday-Saturday
-
-        return {
-          id: event._id,
-          title: `${subjectName} - ${teacherName}`,
-          daysOfWeek: [day], // FullCalendar uses 0 (Sunday) - 6 (Saturday)
-          startTime: event.startTime,
-          endTime: event.endTime,
-        };
-      }).filter(event => event !== null);
-
-      setEvents(formattedEvents);
-    } catch (error) {
-      console.error("Error fetching schedule:", error);
+      const { data } = await axios.get(
+        `${baseApi}/schedule/fetch-with-semester/${selectedSemester}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const formatted = data.data
+        .filter((ev) => ev.day >= 1 && ev.day <= 6)
+        .map((ev) => ({
+          id: ev._id,
+          title: `${ev.subject.subject_name} - ${ev.teacher.name}`,
+          daysOfWeek: [ev.day],
+          startTime: ev.startTime,
+          endTime: ev.endTime,
+        }));
+      setEvents(formatted);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleEventAdded = (newEvent) => {
-    if (!newEvent || !newEvent.subject || !newEvent.teacher) return;
-
-    setEvents((prevEvents) => [
-      ...prevEvents,
-      {
-        id: newEvent._id,
-        title: `${newEvent.subject?.subject_name || "Unknown Subject"} - ${newEvent.teacher?.name || "Unknown Teacher"}`,
-        daysOfWeek: [newEvent.day],
-        startTime: newEvent.startTime,
-        endTime: newEvent.endTime,
-      },
-    ]);
-
-    setTimeout(fetchSchedule, 500);
+  const handleEventAdded = () => {
     setNewPeriod(false);
+    setTimeout(fetchSchedule, 300);
+  };
+
+  // custom renderer: subject on first line, teacher on second
+  const renderEventContent = (info) => {
+    const [subject, teacher] = info.event.title.split(" - ");
+    return (
+      <div
+        style={{
+          background: "#1976d2",
+          color: "#fff",
+          borderRadius: 4,
+          padding: "4px 6px",
+          fontSize: 12,
+          lineHeight: 1.2,
+        }}
+      >
+        <div style={{ fontWeight: 600 }}>{subject}</div>
+        <div style={{ fontStyle: "italic", opacity: 0.9 }}>{teacher}</div>
+      </div>
+    );
   };
 
   return (
-    <div style={{ height: "100vh", padding: "20px" }}>
-      <TextField
-        select
-        fullWidth
-        label="Semester"
-        variant="outlined"
-        value={selectedSemester}
-        onChange={(e) => setSelectedSemester(e.target.value)}
-      >
-        <MenuItem value="">Select Semester</MenuItem>
-        {semesters.map((x) => (
-          <MenuItem key={x._id} value={x._id}>
-            {x.semester_text} ({x.semester_num})
-          </MenuItem>
-        ))}
-      </TextField>
-
-      <Button onClick={() => setNewPeriod(true)} disabled={!selectedSemester}>
-        Add New Period
-      </Button>
-
-      {newPeriod && (
-        <ScheduleEvent selectedSemester={selectedSemester} onEventAdded={handleEventAdded} />
-      )}
-
-      <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        events={events}
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "timeGridWeek,timeGridDay",
+    <>
+      {/* Global overrides for FullCalendar */}
+      <GlobalStyles
+        styles={{
+          ".fc-timegrid-col, .fc-daygrid-day-frame": {
+            minWidth: "120px !important",
+          },
+          ".fc-col-header-cell": {
+            backgroundColor: "#f0f0f0",
+            border: "none",
+            padding: "8px !important",
+            textAlign: "center",
+          },
+          ".fc-scroller": {
+            overflowX: "auto !important",
+            overflowY: "auto !important",
+            maxHeight: "70vh",
+          },
+          ".fc-button": {
+            backgroundColor: "#1976d2",
+            color: "#fff",
+            border: "none",
+            "&:hover": {
+              backgroundColor: "#155fa0",
+            },
+          },
+          ".fc-button-active": {
+            backgroundColor: "#155fa0 !important",
+          },
         }}
-        slotMinTime="08:00:00"
-        slotMaxTime="20:00:00"
-        allDaySlot={false}
-        editable={false}
-        selectable={false}
-        height="80vh"
       />
-    </div>
+
+      <Box sx={{ p: 2 }}>
+        <TextField
+          select
+          fullWidth
+          label="Semester"
+          value={selectedSemester}
+          onChange={(e) => setSelectedSemester(e.target.value)}
+          sx={{ mb: 2 }}
+        >
+          <MenuItem value="">Select Semester</MenuItem>
+          {semesters.map((s) => (
+            <MenuItem key={s._id} value={s._id}>
+              {s.semester_text} ({s.semester_num})
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <Button
+          variant="contained"
+          onClick={() => setNewPeriod(true)}
+          disabled={!selectedSemester}
+          sx={{ mb: 2 }}
+        >
+          Add New Period
+        </Button>
+
+        {newPeriod && (
+          <ScheduleEvent
+            selectedSemester={selectedSemester}
+            onEventAdded={handleEventAdded}
+          />
+        )}
+
+        <Box
+          sx={{
+            border: "1px solid #ddd",
+            borderRadius: 1,
+            overflow: "auto",
+          }}
+        >
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            hiddenDays={[0]} // remove Sunday
+            events={events}
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "timeGridWeek,timeGridDay",
+            }}
+            slotMinTime="08:00:00"
+            slotMaxTime="20:00:00"
+            allDaySlot={false}
+            editable={false}
+            selectable={false}
+            nowIndicator
+            eventContent={renderEventContent}
+            height="auto"
+            contentHeight="auto"
+          />
+        </Box>
+      </Box>
+    </>
   );
 }
