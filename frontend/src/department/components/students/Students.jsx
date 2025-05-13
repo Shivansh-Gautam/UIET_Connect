@@ -553,7 +553,7 @@ const Students = () => {
             <Card
               key={student._id}
               sx={{
-                height: 450,
+                height: 550,
                 boxShadow: 4,
                 borderRadius: 4,
                 display: "flex",
@@ -563,7 +563,7 @@ const Students = () => {
             >
               <CardMedia
                 component="img"
-                sx={{ height: 180, objectFit: "cover" }}
+                sx={{ height: 280, objectFit: "cover" }}
                 image={`/images/uploaded/student/${student.student_image}`}
                 alt="Student Image"
               />
