@@ -80,6 +80,8 @@ const Teachers = () => {
       name: teacher.name,
       email: teacher.email,
       gender: teacher.gender,
+      teacher_contact: teacher.teacher_contact,
+      dob: teacher.dob,
       age: teacher.age,
       qualification: teacher.qualification,
       password: "",
@@ -179,6 +181,8 @@ const Teachers = () => {
       name: "",
       email: "",
       gender: "",
+      teacher_contact: "",
+      dob: "",
       age: "",
       qualification: "",
       password: "",
@@ -344,6 +348,29 @@ const Teachers = () => {
             error={formik.touched.age && Boolean(formik.errors.age)}
             helperText={formik.touched.age && formik.errors?.age}
           />
+          <TextField
+            fullWidth
+            label="Date of Birth"
+            type="date"
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            {...formik.getFieldProps("dob")}
+            error={formik.touched.dob && Boolean(formik.errors.dob)}
+            helperText={formik.touched.dob && formik.errors.dob}
+          />
+          <TextField
+            fullWidth
+            label="Contact Number"
+            variant="outlined"
+            {...formik.getFieldProps("teacher_contact")}
+            error={
+              formik.touched.teacher_contact &&
+              Boolean(formik.errors.teacher_contact)
+            }
+            helperText={
+              formik.touched.teacher_contact && formik.errors?.teacher_contact
+            }
+          />
 
           <TextField
             fullWidth
@@ -461,7 +488,7 @@ const Teachers = () => {
             <Card
               key={teacher._id}
               sx={{
-                height: 450,
+                height: 550,
                 boxShadow: 4,
                 borderRadius: 4,
                 display: "flex",
@@ -494,6 +521,14 @@ const Teachers = () => {
 
                   <Typography variant="body2" gutterBottom>
                     <strong>Age:</strong> {teacher.age}
+                  </Typography>
+
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Date of Birth:</strong> {teacher.dob}
+                  </Typography>
+
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Contact No:</strong> {teacher.teacher_contact}
                   </Typography>
 
                   <Typography variant="body2" gutterBottom>

@@ -38,6 +38,7 @@ import StudentProfile from "./student/components/student details/StudentProfile"
 import IdGenerator from "./student/components/student details/IdGenerator";
 import AssignmentStudent from "./student/components/assignment/AssignmentStudent";
 import AssignmentTeacher from "./teacher/components/assignment/AssignmentTeacher";
+import TeacherProfile from "./teacher/components/teacher details/TeacherProfile";
 const LazyTeacherNotes = lazy(() =>
   import("./teacher/components/notes/NotesTeacher")
 );
@@ -101,6 +102,7 @@ function App() {
             <Route path="examinations" element={<ExaminationsTeacher />} />
             <Route path="notice" element={<NoticeTeacher />} />
             <Route path="schedule" element={<ScheduleTeacher />} />
+            <Route path="profile" element={<TeacherProfile />} />
             <Route path="assignment" element={<AssignmentTeacher />} />
             <Route
               path="notes"

@@ -38,6 +38,8 @@ import HomeIcon from "@mui/icons-material/Home";
 import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { baseApi } from "../environment";
+
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import axios from "axios";
 
 const drawerWidth = 240;
@@ -175,6 +177,16 @@ export default function Teacher() {
     },
     { link: "/teacher/schedule", component: "Schedule", icon: EventIcon },
     {
+      link: "/teacher/assignment",
+      component: "Assignment",
+      icon: DocumentScannerIcon,
+    },
+    {
+      link: "/teacher/profile",
+      component: "Profile",
+      icon: AccountBoxIcon,
+    },
+    {
       link: "/teacher/attendance",
       component: "Attendance",
       icon: RecentActorsIcon,
@@ -296,7 +308,14 @@ export default function Teacher() {
 
             <Divider sx={{ width: "100%", my: 1 }} />
 
-            <MenuItem onClick={handleProfileClose}>View Profile</MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleProfileClose();
+                navigate("/teacher/profile");
+              }}
+            >
+              View Profile
+            </MenuItem>
 
             <MenuItem
               onClick={() => {

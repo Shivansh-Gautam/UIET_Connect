@@ -37,6 +37,8 @@ module.exports = {
           const newTeacher = new Teacher({
             department: req.user.department,
             email: fields.email[0],
+            dob: fields.dob[0],
+            teacher_contact: fields.teacher_contact[0],
             name: fields.name[0],
             gender: fields.gender[0],
             age: fields.age[0],
