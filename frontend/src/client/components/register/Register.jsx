@@ -48,7 +48,7 @@ const Register = () => {
       hod_name: "",
       password: "",
       confirm_password: "",
-      passcode:"",
+      passcode: "",
     },
     validationSchema: registerSchema,
     onSubmit: async (values) => {
@@ -108,8 +108,8 @@ const Register = () => {
         marginBottom: "30px",
         borderRadius: "40px",
         backgroundImage: `url(${backgroundImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
       <Box
@@ -133,8 +133,8 @@ const Register = () => {
             // backgroundImage: `url(${backgroundImage})`,
             // backgroundSize: "cover",
             // backgroundPosition: "center",
-            backgroundColor:"black",
-            opacity:"70%",
+            backgroundColor: "black",
+            opacity: "70%",
             height: "400px",
             color: "white",
           }}
@@ -155,7 +155,7 @@ const Register = () => {
           p={4}
           borderRadius={6}
           boxShadow={18}
-          sx={{ backgroundColor:"white"}}
+          sx={{ backgroundColor: "white" }}
           mt={{ xs: 4, md: 0 }}
           ml={{ md: 4 }}
         >

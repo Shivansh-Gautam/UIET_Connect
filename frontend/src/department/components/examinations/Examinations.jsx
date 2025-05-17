@@ -120,7 +120,11 @@ export default function Examinations() {
           await axios.patch(`${baseApi}/examination/update/${editId}`, values, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setSnackbar({ open: true, message: "Exam updated successfully", severity: "success" });
+          setSnackbar({
+            open: true,
+            message: "Exam updated successfully",
+            severity: "success",
+          });
           setEditId(null);
         } else {
           await axios.post(
@@ -133,16 +137,23 @@ export default function Examinations() {
             },
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          setSnackbar({ open: true, message: "Exam created successfully!", severity: "success" });
+          setSnackbar({
+            open: true,
+            message: "Exam created successfully!",
+            severity: "success",
+          });
         }
 
         fetchExaminations(values.semester); // Keep the semester
         setFieldValue("examDate", "");
         setFieldValue("subject", "");
         setFieldValue("examType", "");
-
       } catch (error) {
-        setSnackbar({ open: true, message: "Failed to create exam.", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: "Failed to create exam.",
+          severity: "error",
+        });
       }
     },
   });
@@ -163,14 +174,21 @@ export default function Examinations() {
         await axios.get(`${baseApi}/examination/delete/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSnackbar({ open: true, message: "Exam deleted successfully", severity: "success" });
+        setSnackbar({
+          open: true,
+          message: "Exam deleted successfully",
+          severity: "success",
+        });
         fetchExaminations(formik.values.semester); // Refresh exams without resetting semester
       } catch (error) {
-        setSnackbar({ open: true, message: "Error deleting Exam", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: "Error deleting Exam",
+          severity: "error",
+        });
       }
     }
   };
-
 
   return (
     <>

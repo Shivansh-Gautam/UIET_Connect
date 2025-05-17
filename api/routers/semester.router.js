@@ -1,10 +1,10 @@
 const express = require("express");
 const authMiddleware = require("../auth/auth");
 const {
+  createSemester,
   getAllSemesters,
   updateSemesterWithId,
   deleteSemesterWithId,
-  createSemester,
 } = require("../controllers/semester.controller");
 const router = express.Router();
 

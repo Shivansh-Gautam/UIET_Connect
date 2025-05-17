@@ -72,7 +72,7 @@ module.exports = {
           const token = jwt.sign(
             {
               id: department._id,
-              department: department._id, 
+              department: department._id,
               department_name: department.department_name,
               image_url: department.department_image,
               hod_name: department.hod_name,
@@ -80,7 +80,6 @@ module.exports = {
             },
             jwtSecret
           );
-          
 
           res.header("Authorization", token);
           res.status(200).json({
@@ -203,8 +202,15 @@ module.exports = {
         }
   
         // Update other fields
+        if (fields.password) {
+          const salt = bcrypt.genSaltSync(10);
+          const hashPassword = bcrypt.hashSync(fields.password[0], salt);
+          department.password = hashPassword;
+        }
         Object.keys(fields).forEach((field) => {
-          department[field] = fields[field][0];
+          if (field !== 'password') {
+            department[field] = fields[field][0];
+          }
         });
   
         // Save the updated department

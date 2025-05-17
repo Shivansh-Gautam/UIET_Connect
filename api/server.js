@@ -23,6 +23,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+const path = require("path");
+
+// Serve static files from uploads directory
+// Removed redundant static serving to avoid conflicts
+// app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve static files for teacher images
+app.use('/teacher_images', express.static(path.join(__dirname, 'uploads/teacher_images')));
+
+// Serve static files for student images
+app.use('/student_images', express.static(path.join(__dirname, 'uploads/student_images')));
+
 // CORS Configuration (Allow frontend access)
 const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5173"];
 if (!process.env.CLIENT_URL) {

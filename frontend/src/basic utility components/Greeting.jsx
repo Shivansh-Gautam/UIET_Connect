@@ -9,7 +9,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import axios from "axios";
-import ss4 from "../assets/welcome.png";
 import { baseApi } from "../environment";
 
 import { motion } from "framer-motion"; // ✨ added
@@ -72,7 +71,7 @@ const Greeting = ({ role, apiEndpoint }) => {
     <>
       <SnackbarAlert {...alert} onClose={handleAlertClose} />
 
-      <Container maxWidth="lg" sx={{ my: 4 }}>
+      <Container maxWidth="xl" sx={{ my: 4 }}>
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
             <CircularProgress />
@@ -118,7 +117,9 @@ const Greeting = ({ role, apiEndpoint }) => {
               >
                 <CardMedia
                   component="img"
-                  image={ss4}
+                  image={`../../images/uploaded/${role}/${
+                    user[`${role}_image`]
+                  }`}
                   alt="Welcome"
                   sx={{
                     width: 250,

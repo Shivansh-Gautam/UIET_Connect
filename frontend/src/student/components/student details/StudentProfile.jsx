@@ -7,10 +7,34 @@ import {
   Avatar,
   Button,
   TextField,
+  Toolbar,
+  IconButton,
 } from "@mui/material";
 import axios from "axios";
 import { baseApi } from "../../../environment";
 import SnackbarAlert from "../../../basic utility components/snackbar/SnackbarAlert";
+import EditIcon from "@mui/icons-material/Edit";
+import SyncIcon from "@mui/icons-material/Sync";
+import { styled } from "@mui/system";
+
+const Header = styled(Box)(({ theme }) => ({
+  backgroundColor: "#4b4f9c",
+  position: "relative",
+  overflow: "hidden",
+  borderRadius: "0 0 24px 24px",
+  padding: theme.spacing(3),
+  textAlign: "center",
+}));
+
+const BackgroundImage = styled("img")({
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  zIndex: -1,
+});
 
 const StudentProfile = () => {
   const token = localStorage.getItem("authToken");
@@ -18,6 +42,7 @@ const StudentProfile = () => {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
+  const [imagePreview, setImagePreview] = useState(null);
   const [alert, setAlert] = useState({
     open: false,
     message: "",
@@ -42,6 +67,7 @@ const StudentProfile = () => {
       });
       setStudent(response.data.student);
       setFormData(response.data.student);
+      setImagePreview(null);
     } catch (error) {
       console.error("Error fetching student details:", error);
       setAlert({
@@ -64,11 +90,12 @@ const StudentProfile = () => {
           data.append("department", typeof dep === "object" ? dep._id : dep);
         } else if (key === "student_class" && formData.student_class) {
           const cls = formData.student_class;
-          if (typeof cls === "object" && cls._id) {
-            data.append("student_class", cls._id);
-          } else if (typeof cls === "string") {
-            data.append("student_class", cls);
-          }
+          data.append("student_class", typeof cls === "object" ? cls._id : cls);
+        } else if (
+          key === "student_image" &&
+          formData.student_image instanceof File
+        ) {
+          data.append("image", formData.student_image); // <-- changed key to 'image' for backend
         } else {
           data.append(key, formData[key]);
         }
@@ -87,6 +114,7 @@ const StudentProfile = () => {
         severity: "success",
       });
       setEditing(false);
+      setImagePreview(null); // Clear preview to use fresh image from backend
       fetchStudentDetails();
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -105,17 +133,25 @@ const StudentProfile = () => {
   }, [fetchStudentDetails]);
 
   const getImageUrl = (filename) =>
-    filename ? `${baseApi.replace("/api", "")}/student_images/${filename}` : "";
+    filename ? `../../images/uploaded/student/${filename}` : "";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, student_image: file }));
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const idToYearMap = {
     "6808a9d279c6bb24421c5524": "2nd Year",
     "6808a9d379c6bb24421c5527": "3rd Year",
-    "6808a9d379c6bb24421c552a": "4th Year",
+    "68239d467546b5a5586adc9f": "4th Year",
   };
 
   const getYearText = () => {
@@ -132,177 +168,211 @@ const StudentProfile = () => {
     <>
       <SnackbarAlert {...alert} onClose={handleAlertClose} />
 
-      <Typography
-        variant="h3"
-        sx={{ textAlign: "center", fontWeight: 700, color: "#1976d2", mb: 4 }}
-      >
-        Student Profile
-      </Typography>
+      {editing ? (
+        <>
+          <TextField
+            label="Name"
+            name="name"
+            value={formData.name || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Email"
+            name="email"
+            value={formData.email || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Gender"
+            name="gender"
+            value={formData.gender || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Age"
+            name="age"
+            value={formData.age || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+            type="number"
+          />
+          <TextField
+            label="Contact"
+            name="student_contact"
+            value={formData.student_contact || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Guardian"
+            name="guardian"
+            value={formData.guardian || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Guardian Phone"
+            name="guardian_phone"
+            value={formData.guardian_phone || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+            helperText="Enter new password to change it"
+          />
+          <TextField
+            label="Confirm Password"
+            name="confirm_password"
+            type="password"
+            value={formData.confirm_password || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
 
-      <Paper
-        elevation={6}
-        sx={{
-          p: 4,
-          borderRadius: 3,
-          backgroundColor: "#f9fafb",
-          maxWidth: 700,
-          mx: "auto",
-        }}
-      >
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
-            <CircularProgress />
+          <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              sx={{ alignSelf: "center" }}
+            >
+              Upload Image
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleImageChange}
+              />
+            </Button>
+
+            <Button
+              variant="contained"
+              color="success"
+              onClick={updateStudentDetails}
+            >
+              Save
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </Button>
           </Box>
-        ) : student ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 3,
-            }}
-          >
-            <Avatar
-              src={getImageUrl(student.student_image)}
-              alt={student.name}
-              sx={{ width: 120, height: 120 }}
-            />
+        </>
+      ) : (
+        <Box
+          sx={{
+            bgcolor: "#f8fafc",
+            minHeight: "100vh",
+            p: 4,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          {student && (
+            <Box sx={{ maxWidth: 800, width: "100%" }}>
+              <Header>
+                <BackgroundImage
+                  src="https://storage.googleapis.com/a1aa/image/3663d737-88d7-4ef0-7bcd-9c4977a3d038.jpg"
+                  alt="Background"
+                />
+                <Toolbar>
+                  <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{ flexGrow: 1, color: "white", fontWeight: "bold" }}
+                  >
+                    Profile
+                  </Typography>
+                </Toolbar>
 
-            {editing ? (
-              <>
-                <TextField
-                  label="Name"
-                  name="name"
-                  value={formData.name || ""}
-                  onChange={handleChange}
-                  fullWidth
-                />
-                <TextField
-                  label="Email"
-                  name="email"
-                  value={formData.email || ""}
-                  onChange={handleChange}
-                  fullWidth
-                />
-                <TextField
-                  label="Gender"
-                  name="gender"
-                  value={formData.gender || ""}
-                  onChange={handleChange}
-                  fullWidth
-                />
-                <TextField
-                  label="Age"
-                  name="age"
-                  value={formData.age || ""}
-                  onChange={handleChange}
-                  fullWidth
-                />
-                <TextField
-                  label="Contact"
-                  name="student_contact"
-                  value={formData.student_contact || ""}
-                  onChange={handleChange}
-                  fullWidth
-                />
-                <TextField
-                  label="Guardian"
-                  name="guardian"
-                  value={formData.guardian || ""}
-                  onChange={handleChange}
-                  fullWidth
-                />
-                <TextField
-                  label="Guardian Phone"
-                  name="guardian_phone"
-                  value={formData.guardian_phone || ""}
-                  onChange={handleChange}
-                  fullWidth
-                />
-                <TextField
-                  label="Password"
-                  name="password"
-                  type="password"
-                  value={formData.password || ""}
-                  onChange={handleChange}
-                  fullWidth
-                  helperText="Enter new password to change it"
-                />
-                <TextField
-                  label="Confirm Password"
-                  name="confirm_password"
-                  type="password"
-                  value={formData.confirm_password || ""}
-                  onChange={handleChange}
-                  fullWidth
+                <Avatar
+                  alt={student.name}
+                  src={getImageUrl(student.student_image)}
+                  sx={{
+                    width: 128,
+                    height: 128,
+                    border: "4px solid #def0f0",
+                    margin: "16px auto",
+                  }}
                 />
 
-                <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  sx={{ color: "white", fontWeight: "bold", mt: 2 }}
+                >
+                  {student.name}
+                </Typography>
+                <Typography variant="body1" sx={{ color: "white", mt: 1 }}>
+                  {student.email}
+                </Typography>
+              </Header>
+              <Paper elevation={3} sx={{ mt: 4, p: 4, borderRadius: "24px" }}>
+                <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
+                  General
+                </Typography>
+                <ProfileDetail label="Date of Birth" value="21.07.2003" />
+                <ProfileDetail label="Year" value={getYearText()} />
+                <ProfileDetail label="Age" value={student.age} />
+                <ProfileDetail label="Roll number" value="75634539" />
+                <ProfileDetail label="Gender" value={student.gender} />
+                <ProfileDetail
+                  label="Phone Number"
+                  value={student.student_contact}
+                />
+                <ProfileDetail label="Guardian" value={student.guardian} />
+                <ProfileDetail
+                  label="Guardian Number"
+                  value={student.guardian_phone}
+                />
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                   <Button
                     variant="contained"
-                    color="success"
-                    onClick={updateStudentDetails}
+                    color="primary"
+                    startIcon={<SyncIcon />}
+                    onClick={() => setEditing(true)}
                   >
-                    Save
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => setEditing(false)}
-                  >
-                    Cancel
+                    Update
                   </Button>
                 </Box>
-              </>
-            ) : (
-              <>
-                <Typography variant="h5">
-                  <strong>Name:</strong> {student.name}
-                </Typography>
-                <Typography variant="h6">
-                  <strong>Email:</strong> {student.email}
-                </Typography>
-                <Typography variant="h6">
-                  <strong>Gender:</strong> {student.gender}
-                </Typography>
-                <Typography variant="h6">
-                  <strong>Age:</strong> {student.age}
-                </Typography>
-                <Typography variant="h6">
-                  <strong>Contact:</strong> {student.student_contact}
-                </Typography>
-                <Typography variant="h6">
-                  <strong>Guardian:</strong> {student.guardian}
-                </Typography>
-                <Typography variant="h6">
-                  <strong>Guardian Phone:</strong> {student.guardian_phone}
-                </Typography>
-                <Typography variant="h6">
-                  <strong>Password:</strong> ****
-                </Typography>
-                <Typography variant="h6">
-                  <strong>Year:</strong> {getYearText()}
-                </Typography>
-
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  sx={{ mt: 2 }}
-                  onClick={() => setEditing(true)}
-                >
-                  Edit Profile
-                </Button>
-              </>
-            )}
-          </Box>
-        ) : (
-          <Typography variant="h6" color="textSecondary" textAlign="center">
-            No student data available.
-          </Typography>
-        )}
-      </Paper>
+              </Paper>
+            </Box>
+          )}
+        </Box>
+      )}
     </>
   );
 };
+
+const ProfileDetail = ({ label, value }) => (
+  <Box sx={{ mb: 2 }}>
+    <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+      {label}
+    </Typography>
+    <Typography variant="body2" sx={{ color: "gray" }}>
+      {value}
+    </Typography>
+  </Box>
+);
 
 export default StudentProfile;

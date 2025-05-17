@@ -22,7 +22,7 @@ export default function ExaminationsStudent() {
   const token = localStorage.getItem("authToken");
   const [examinations, setExaminations] = React.useState([]);
   const [semesters, setSemesters] = React.useState([]);
-  const [ setSubjects] = React.useState([]);
+
   const [editId, setEditId] = React.useState(null);
   const [snackbar, setSnackbar] = React.useState({
     open: false,
@@ -57,17 +57,6 @@ export default function ExaminationsStudent() {
         params: { year: semesterId },
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.status === 200 && res.data && res.data.subjects) {
-        setSubjects(res.data.subjects);
-      } else {
-        console.log("fetchSubjects error response data:", res.data);
-        // Removed snackbar error message for failed subject fetch to avoid showing "Failed to fetch subjects."
-        // setSnackbar({
-        //   open: true,
-        //   message: "Failed to fetch subjects.",
-        //   severity: "error",
-        // });
-      }
     } catch (error) {
       console.error("fetchSubjects error:", error);
       // Removed snackbar error message for failed subject fetch to avoid showing "Failed to fetch subjects."
@@ -129,7 +118,11 @@ export default function ExaminationsStudent() {
           await axios.patch(`${baseApi}/examination/update/${editId}`, values, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setSnackbar({ open: true, message: "Exam updated successfully", severity: "success" });
+          setSnackbar({
+            open: true,
+            message: "Exam updated successfully",
+            severity: "success",
+          });
           setEditId(null);
         } else {
           await axios.post(
@@ -142,16 +135,24 @@ export default function ExaminationsStudent() {
             },
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          setSnackbar({ open: true, message: "Exam created successfully!", severity: "success" });
+          setSnackbar({
+            open: true,
+            message: "Exam created successfully!",
+            severity: "success",
+          });
         }
 
         fetchExaminations(values.semester); // Keep the semester
         setFieldValue("examDate", "");
         setFieldValue("subject", "");
         setFieldValue("examType", "");
-
       } catch (error) {
-        setSnackbar({ open: true, message: "Failed to create exam.", severity: "error",error});
+        setSnackbar({
+          open: true,
+          message: "Failed to create exam.",
+          severity: "error",
+          error,
+        });
       }
     },
   });
@@ -159,7 +160,6 @@ export default function ExaminationsStudent() {
   // Removed unused handleEdit function
 
   // Removed unused handleDelete function
-
 
   return (
     <>
@@ -234,7 +234,6 @@ export default function ExaminationsStudent() {
                     {exam.semester?.semester_num || "N/A"}
                   </TableCell>
                   <TableCell align="left">{exam.examType}</TableCell>
-                  
                 </TableRow>
               ))
             ) : (

@@ -269,30 +269,47 @@ module.exports = {
     }
   },
 
-  deleteStudentWithId: async (req, res) => {
-    try {
-      const id = req.params.id;
-      const department = req.user.department;
-      const student = await Student.findOneAndDelete({
-        _id: id,
-        department: department,
-      });
-      if (!student) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Student not found" });
-      }
-      res.status(200).json({
-        success: true,
-        message: "Student deleted successfully",
-      });
-    } catch (error) {
-      console.log(error);
-      res
-        .status(500)
-        .json({ success: false, message: "Error deleting Student" });
+ deleteStudentWithId: async (req, res) => {
+  try {
+    const id = req.params.id;
+    const department = req.user.department;
+
+    const student = await Student.findOne({
+      _id: id,
+      department: department,
+    });
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
     }
-  },
+
+    // Construct the image path
+    const imagePath = path.join(__dirname, process.env.STUDENT_IMAGE_PATH, student.student_image);
+
+    // Delete student record from DB
+    await Student.findByIdAndDelete(id);
+
+    // Delete image file if it exists
+    if (fs.existsSync(imagePath)) {
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error("Error deleting student image:", err);
+        } else {
+          console.log("Student image deleted:", student.student_image);
+        }
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Student deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting Student:", error);
+    return res.status(500).json({ success: false, message: "Error deleting Student" });
+  }
+}
+,
 
   // Get total students count for a semester and department
   getTotalStudentsCount: async (req, res) => {

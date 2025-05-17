@@ -65,15 +65,12 @@ const Teachers = () => {
 
   const [params, setParams] = useState({});
 
- 
-
   const handleSearch = (e) => {
     setParams((prevParams) => ({
       ...prevParams,
       search: e.target.value || undefined,
     }));
   };
-
 
   const handleEdit = (id) => {
     setEdit(true);
@@ -92,22 +89,37 @@ const Teachers = () => {
 
   const handleDelete = async (teacherId) => {
     if (!token) {
-      setSnackbar({ open: true, message: "Authorization token missing", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: "Authorization token missing",
+        severity: "error",
+      });
       return;
     }
     try {
-      await axios.delete(`${baseApi}/teacher/delete/${teacherId}`, { headers: { Authorization: `Bearer ${token}` } });
-      setSnackbar({ open: true, message: "Teacher deleted successfully!", severity: "success" });
+      await axios.delete(`${baseApi}/teacher/delete/${teacherId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSnackbar({
+        open: true,
+        message: "Teacher deleted successfully!",
+        severity: "success",
+      });
       fetchTeachers();
     } catch (error) {
-      setSnackbar({ open: true, message: "Failed to delete teacher", severity: "error", error });
+      setSnackbar({
+        open: true,
+        message: "Failed to delete teacher",
+        severity: "error",
+        error,
+      });
     }
   };
 
-  const handleCancel = ()=>{
+  const handleCancel = () => {
     formik.resetForm();
-    setEdit(false)
-  }
+    setEdit(false);
+  };
 
   const [teachers, setTeachers] = useState([]);
 
@@ -172,9 +184,10 @@ const Teachers = () => {
       password: "",
       confirm_password: "",
     },
-    validationSchema:edit?teacherEditSchema:teacherSchema,
+    validationSchema: edit ? teacherEditSchema : teacherSchema,
     onSubmit: async (values) => {
-      if (!edit && !image) { // Only check for image on new registration
+      if (!edit && !image) {
+        // Only check for image on new registration
         setSnackbar({
           open: true,
           message: "Please upload an image before registering.",
@@ -200,19 +213,31 @@ const Teachers = () => {
           await axios.patch(`${baseApi}/teacher/update/${editId}`, fd, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setSnackbar({ open: true, message: "Teacher updated successfully!", severity: "success" });
+          setSnackbar({
+            open: true,
+            message: "Teacher updated successfully!",
+            severity: "success",
+          });
         } else {
           await axios.post(`${baseApi}/teacher/register`, fd, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setSnackbar({ open: true, message: "Registered Successfully!", severity: "success" });
+          setSnackbar({
+            open: true,
+            message: "Registered Successfully!",
+            severity: "success",
+          });
         }
         formik.resetForm();
         setEdit(false);
         setImage(null);
         fetchTeachers();
       } catch (e) {
-        setSnackbar({ open: true, message: e.response?.data?.message || "Operation failed.", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: e.response?.data?.message || "Operation failed.",
+          severity: "error",
+        });
       }
     },
   });
@@ -230,21 +255,25 @@ const Teachers = () => {
         maxWidth="sm"
         sx={{ mt: 8, mb: 8, p: 4, borderRadius: 4, boxShadow: 9 }}
       >
-        {edit?<Typography
-          variant="h4"
-          component="h1"
-          gutterBottom
-          sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
-        >
-          Edit Teacher
-        </Typography>:<Typography
-          variant="h4"
-          component="h1"
-          gutterBottom
-          sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
-        >
-          Add New Teacher
-        </Typography>}
+        {edit ? (
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
+          >
+            Edit Teacher
+          </Typography>
+        ) : (
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{ textAlign: "center", mb: 4, fontWeight: "bold" }}
+          >
+            Add New Teacher
+          </Typography>
+        )}
         <Box
           component="form"
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
@@ -315,18 +344,20 @@ const Teachers = () => {
             error={formik.touched.age && Boolean(formik.errors.age)}
             helperText={formik.touched.age && formik.errors?.age}
           />
-          
 
           <TextField
             fullWidth
             label="Qualification"
             variant="outlined"
             {...formik.getFieldProps("qualification")}
-            error={formik.touched.qualification && Boolean(formik.errors.qualification)}
-            helperText={formik.touched.qualification && formik.errors?.qualification}
+            error={
+              formik.touched.qualification &&
+              Boolean(formik.errors.qualification)
+            }
+            helperText={
+              formik.touched.qualification && formik.errors?.qualification
+            }
           />
-
-          
 
           <TextField
             fullWidth
@@ -360,15 +391,38 @@ const Teachers = () => {
               formik.touched.confirm_password && formik.errors?.confirm_password
             }
           />
-          <Box sx={{textAlign:'center'}}>
-          {edit?<Button sx={{width:'120px',margin:'5px'}} variant="contained" color="primary" type="submit">
-            Update
-          </Button>:<Button sx={{width:'120px',margin:'5px'}} variant="contained" color="primary" type="submit">
-            Register
-          </Button>}
-          {edit && <Button sx={{width:'120px',margin:'5px', background:'red'}} variant="contained"  type="button"onClick={()=>{handleCancel()}}>
-            cancel
-          </Button>}
+          <Box sx={{ textAlign: "center" }}>
+            {edit ? (
+              <Button
+                sx={{ width: "120px", margin: "5px" }}
+                variant="contained"
+                color="primary"
+                type="submit"
+              >
+                Update
+              </Button>
+            ) : (
+              <Button
+                sx={{ width: "120px", margin: "5px" }}
+                variant="contained"
+                color="primary"
+                type="submit"
+              >
+                Register
+              </Button>
+            )}
+            {edit && (
+              <Button
+                sx={{ width: "120px", margin: "5px", background: "red" }}
+                variant="contained"
+                type="button"
+                onClick={() => {
+                  handleCancel();
+                }}
+              >
+                cancel
+              </Button>
+            )}
           </Box>
         </Box>
         <SnackbarAlert
@@ -383,7 +437,6 @@ const Teachers = () => {
         component={"div"}
         sx={{ display: "flex", flexDirection: "row", gap: "10px" }}
       >
-       
         <TextField
           fullWidth
           label="Search"
@@ -418,7 +471,7 @@ const Teachers = () => {
             >
               <CardMedia
                 component="img"
-                sx={{ height: 180, objectFit: "cover" }}
+                sx={{ height: 280, objectFit: "cover" }}
                 image={`/images/uploaded/teacher/${teacher.teacher_image}`}
                 alt="Teacher Image"
               />
@@ -438,25 +491,34 @@ const Teachers = () => {
                   <Typography variant="body2" gutterBottom>
                     <strong>Email:</strong> {teacher.email}
                   </Typography>
-                  
+
                   <Typography variant="body2" gutterBottom>
                     <strong>Age:</strong> {teacher.age}
                   </Typography>
-                 
+
                   <Typography variant="body2" gutterBottom>
                     <strong>Gender:</strong> {teacher.gender}
                   </Typography>
                   <Typography variant="body2" gutterBottom>
                     <strong>Qualification:</strong> {teacher.qualification}
                   </Typography>
-                 
                 </Box>
               </CardContent>
               <CardActions sx={{ justifyContent: "space-between", padding: 1 }}>
-                <IconButton color="primary" onClick={()=>{handleEdit(teacher._id)}}>
+                <IconButton
+                  color="primary"
+                  onClick={() => {
+                    handleEdit(teacher._id);
+                  }}
+                >
                   <EditIcon fontSize="small" />
                 </IconButton>
-                <IconButton color="error" onClick={()=>{handleDelete(teacher._id)}}>
+                <IconButton
+                  color="error"
+                  onClick={() => {
+                    handleDelete(teacher._id);
+                  }}
+                >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </CardActions>
