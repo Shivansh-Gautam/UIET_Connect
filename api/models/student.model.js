@@ -4,6 +4,8 @@ const studentSchema = new mongoose.Schema({
   department: { type: mongoose.Schema.ObjectId, ref: "Department" },
   email: { type: String, required: true },
   name: { type: String, required: true },
+  rollNo: { type: String, required: false },
+  dob: { type: String, required: false },
   student_class: { type: mongoose.Schema.ObjectId, ref: "Semester" },
   gender: { type: String, required: true },
   age: { type: Number, required: true },

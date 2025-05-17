@@ -35,6 +35,8 @@ module.exports = {
           const newStudent = new Student({
             department: req.user.department,
             email: fields.email[0],
+            dob: fields.dob[0],
+            rollNo: fields.rollNo[0],
             name: fields.name[0],
             student_class: fields.student_class[0],
             gender: fields.gender[0],

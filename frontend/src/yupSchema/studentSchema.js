@@ -9,6 +9,11 @@ export const studentSchema = yup.object({
     .string()
     .email("It must be an email")
     .required("Email is required"),
+  dob: yup
+    .date(),
+  rollNo: yup
+    .string()
+    .min(8,"must contain 8 character"),
   student_class: yup.string().required("student class is required field"),
   gender: yup.string().required("gender is required"),
   age: yup.number().required("age is required"),

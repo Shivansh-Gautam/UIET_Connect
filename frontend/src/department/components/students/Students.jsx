@@ -127,6 +127,8 @@ const Students = () => {
       formik.setValues({
         name: student.name || "",
         email: student.email || "",
+        dob: student.dob || "",
+        rollNo: student.rollNo || "",
         student_class: studentClassId,
         gender: student.gender || "",
         age: student.age || "",
@@ -204,6 +206,8 @@ const Students = () => {
     initialValues: {
       name: "",
       email: "",
+      dob: "",
+      rollNo: "",
       student_class: "",
       gender: "",
       age: "",
@@ -354,6 +358,25 @@ const Students = () => {
             {...formik.getFieldProps("email")}
             error={formik.touched.email && Boolean(formik.errors.email)}
             helperText={formik.touched.email && formik.errors?.email}
+          />
+          <TextField
+            fullWidth
+            label="Date of Birth"
+            type="date"
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+            {...formik.getFieldProps("dob")}
+            error={formik.touched.dob && Boolean(formik.errors.dob)}
+            helperText={formik.touched.dob && formik.errors.dob}
+          />
+
+          <TextField
+            fullWidth
+            label="Roll Number"
+            variant="outlined"
+            {...formik.getFieldProps("rollNo")}
+            error={formik.touched.rollNo && Boolean(formik.errors.rollNo)}
+            helperText={formik.touched.rollNo && formik.errors?.rollNo}
           />
           <TextField
             select
@@ -553,7 +576,7 @@ const Students = () => {
             <Card
               key={student._id}
               sx={{
-                height: 550,
+                height: 600,
                 boxShadow: 4,
                 borderRadius: 4,
                 display: "flex",
@@ -584,7 +607,13 @@ const Students = () => {
                     <strong>Email:</strong> {student.email}
                   </Typography>
                   <Typography variant="body2" gutterBottom>
-                    <strong>Semester:</strong>{" "}
+                    <strong>D.O.B:</strong> {student.dob}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Roll Number:</strong> {student.rollNo}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Year:</strong>{" "}
                     {(() => {
                       const yearMapping = {
                         "6808a9d379c6bb24421c5527": "Year (3)",

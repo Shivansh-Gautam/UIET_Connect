@@ -331,10 +331,10 @@ const StudentProfile = () => {
                 <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
                   General
                 </Typography>
-                <ProfileDetail label="Date of Birth" value="21.07.2003" />
+                <ProfileDetail label="Date of Birth" value={student.dob} />
                 <ProfileDetail label="Year" value={getYearText()} />
                 <ProfileDetail label="Age" value={student.age} />
-                <ProfileDetail label="Roll number" value="75634539" />
+                <ProfileDetail label="Roll number" value={student.rollNo} />
                 <ProfileDetail label="Gender" value={student.gender} />
                 <ProfileDetail
                   label="Phone Number"
