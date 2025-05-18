@@ -39,6 +39,11 @@ import IdGenerator from "./student/components/student details/IdGenerator";
 import AssignmentStudent from "./student/components/assignment/AssignmentStudent";
 import AssignmentTeacher from "./teacher/components/assignment/AssignmentTeacher";
 import TeacherProfile from "./teacher/components/teacher details/TeacherProfile";
+import Directors from "./department/components/Directors/Directors";
+import Director from "./director/director";
+import NoticeDirector from "./director/Notice/Notice";
+import HOD from "./director/HOD/HOD";
+
 const LazyTeacherNotes = lazy(() =>
   import("./teacher/components/notes/NotesTeacher")
 );
@@ -63,11 +68,41 @@ function App() {
             <Route path="class" element={<Class />} />
             <Route path="students" element={<Students />} />
             <Route path="teachers" element={<Teachers />} />
+            <Route path="Directors" element={<Directors />} />
+            <Route path="Director" element={<Directors />} />
             <Route path="schedule" element={<Schedule />} />
             <Route path="subjects" element={<Subjects />} />
             <Route path="notice" element={<Notice />} />
             <Route path="examinations" element={<Examinations />} />
           </Route>
+
+          {/* { Director Route} */}
+
+          <Route
+            path="director"
+            element={
+              <ProtectedRoute
+                allowedRoles={["director", "Director", "DIRECTOR"]}
+              >
+                <Director />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="hod" element={<HOD />} />
+            <Route path="notice" element={<NoticeDirector />} />
+          </Route>
+          <Route
+            path="director/home"
+            element={
+              <ProtectedRoute
+                allowedRoles={["director", "Director", "DIRECTOR"]}
+              >
+                <Director />
+              </ProtectedRoute>
+            }
+          />
+
           {/* student */}
           <Route
             path="student"

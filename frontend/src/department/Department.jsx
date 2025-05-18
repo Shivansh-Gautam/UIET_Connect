@@ -18,6 +18,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 
 // Icons
+import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
@@ -141,6 +142,11 @@ export default function Department() {
       link: "/department/teachers",
       component: "Teachers",
       icon: PeopleAltIcon,
+    },
+    {
+      link: "/department/Directors",
+      component: "Director",
+      icon: SupervisorAccountIcon,
     },
     {
       link: "/department/notice",

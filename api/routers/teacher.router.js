@@ -7,13 +7,15 @@ const {
   updateTeacher,
   getTeacherOwnData,
   getTeachersWithQuery,
+  getAllTeachers,
   getTeacherWithId,
   deleteTeacherWithId,
 } = require("../controllers/teacher.controller");
 const router = express.Router();
 
 router.post("/register",authMiddleware(['DEPARTMENT']), registerTeacher);
-router.get("/fetch-with-query",authMiddleware(['DEPARTMENT']), getTeachersWithQuery);
+router.get("/fetch-with-query",authMiddleware(['DEPARTMENT', 'DIRECTOR']), getTeachersWithQuery);
+router.get("/fetch-all", authMiddleware(['DIRECTOR', 'DEPARTMENT']), getAllTeachers);
 router.post("/login", loginTeacher);
 router.patch("/update/:id",authMiddleware(["DEPARTMENT", "TEACHER"]), updateTeacher);
 router.get("/fetch-single",authMiddleware(["TEACHER", "STUDENT"]),getTeacherOwnData);

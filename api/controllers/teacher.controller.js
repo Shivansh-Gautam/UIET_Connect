@@ -37,8 +37,6 @@ module.exports = {
           const newTeacher = new Teacher({
             department: req.user.department,
             email: fields.email[0],
-            dob: fields.dob[0],
-            teacher_contact: fields.teacher_contact[0],
             name: fields.name[0],
             gender: fields.gender[0],
             age: fields.age[0],
@@ -109,6 +107,7 @@ module.exports = {
   getTeachersWithQuery: async (req, res) => {
     try {
       const filterQuery = {};
+      // Enable department filter to fetch teachers only from admin's department
       const department = req.user.department;
       filterQuery["department"] = department;
 
@@ -126,6 +125,28 @@ module.exports = {
       res.status(500).json({
         success: false,
         message: "internal server error:[all Teacher]",
+      });
+    }
+  },
+
+  getAllTeachers: async (req, res) => {
+    try {
+      const filterQuery = {};
+
+      if (req.query.hasOwnProperty("search")) {
+        filterQuery["name"] = { $regex: req.query.search, $options: "i" };
+      }
+
+      const teachers = await Teacher.find(filterQuery);
+      res.status(200).json({
+        success: true,
+        message: "success in fetching all Teachers without department filter",
+        teachers,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "internal server error:[all Teachers without department]",
       });
     }
   },
